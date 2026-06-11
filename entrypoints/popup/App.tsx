@@ -19,7 +19,7 @@ export default function App() {
       } else {
         setState('needs-resume');
       }
-    });
+    }).catch(() => setState('needs-resume'));
   }, []);
 
   function handleResumeDone(fileName: string) {
