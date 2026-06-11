@@ -1,35 +1,47 @@
 import { useState } from 'react';
-import reactLogo from '@/assets/react.svg';
-import wxtLogo from '/wxt.svg';
-import './App.css';
+import NeedsResume from './views/NeedsResume';
+import Ready from './views/Ready';
+import ShowingResults from './views/ShowingResults';
 
-function App() {
-  const [count, setCount] = useState(0);
+type PopupState = 'needs-resume' | 'ready' | 'showing-results';
+
+const DEV_STATES: PopupState[] = ['needs-resume', 'ready', 'showing-results'];
+
+export default function App() {
+  const [state, setState] = useState<PopupState>('needs-resume');
 
   return (
-    <>
-      <div>
-        <a href="https://wxt.dev" target="_blank">
-          <img src={wxtLogo} className="logo" alt="WXT logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="w-95 min-h-120 bg-white flex flex-col">
+      {/* Dev-only state switcher */}
+      <div className="flex gap-1 px-2 py-1.5 bg-amber-50 border-b border-amber-200">
+        <span className="text-[10px] text-amber-600 font-medium self-center mr-1">DEV</span>
+        {DEV_STATES.map((s) => (
+          <button
+            key={s}
+            onClick={() => setState(s)}
+            className={`rounded px-2 py-0.5 text-[10px] font-mono transition-colors ${
+              state === s
+                ? 'bg-amber-400 text-white'
+                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            }`}
+          >
+            {s}
+          </button>
+        ))}
       </div>
-      <h1>WXT + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      {/* Header */}
+      <div className="px-6 pt-4 pb-2">
+        <h1 className="text-lg font-bold text-gray-900">JobFit</h1>
+        <p className="text-xs text-gray-400">Am I a good fit for this role?</p>
       </div>
-      <p className="read-the-docs">
-        Click on the WXT and React logos to learn more
-      </p>
-    </>
+
+      {/* View */}
+      <div className="flex flex-col flex-1">
+        {state === 'needs-resume' && <NeedsResume onDone={() => setState('ready')} />}
+        {state === 'ready' && <Ready onDone={() => setState('showing-results')} />}
+        {state === 'showing-results' && <ShowingResults onBack={() => setState('ready')} />}
+      </div>
+    </div>
   );
 }
-
-export default App;
