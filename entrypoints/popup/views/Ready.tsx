@@ -1,10 +1,15 @@
+import LinkedInUploadSection from '../../../components/LinkedInUploadSection';
+
 interface Props {
   fileName: string;
   onDone: () => void;
   onRemove: () => void;
+  linkedInFileName: string;
+  onLinkedInDone: (fileName: string, text: string) => void;
+  onLinkedInRemove: () => void;
 }
 
-export default function Ready({ fileName, onDone, onRemove }: Props) {
+export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove }: Props) {
   return (
     <div className="flex flex-col gap-4 px-6 py-6">
       <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
@@ -22,6 +27,12 @@ export default function Ready({ fileName, onDone, onRemove }: Props) {
           </svg>
         </button>
       </div>
+
+      <LinkedInUploadSection
+        fileName={linkedInFileName}
+        onDone={onLinkedInDone}
+        onRemove={onLinkedInRemove}
+      />
 
       <div className="rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs text-gray-400">
         No job description detected on this page.

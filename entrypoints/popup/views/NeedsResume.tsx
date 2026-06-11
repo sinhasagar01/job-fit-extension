@@ -1,11 +1,15 @@
 import { useRef, useState } from 'react';
 import { parsePdf } from '../../../utils/parsePdf';
+import LinkedInUploadSection from '../../../components/LinkedInUploadSection';
 
 interface Props {
   onDone: (fileName: string) => void;
+  linkedInFileName: string;
+  onLinkedInDone: (fileName: string, text: string) => void;
+  onLinkedInRemove: () => void;
 }
 
-export default function NeedsResume({ onDone }: Props) {
+export default function NeedsResume({ onDone, linkedInFileName, onLinkedInDone, onLinkedInRemove }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'parsing' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -60,6 +64,12 @@ export default function NeedsResume({ onDone }: Props) {
       {status === 'error' && (
         <p className="text-xs text-red-500">{errorMsg}</p>
       )}
+
+      <LinkedInUploadSection
+        fileName={linkedInFileName}
+        onDone={onLinkedInDone}
+        onRemove={onLinkedInRemove}
+      />
 
       <button onClick={() => onDone('dev-skip.pdf')} className="text-xs text-gray-400 underline">
         Skip (dev only)

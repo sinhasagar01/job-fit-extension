@@ -7,31 +7,58 @@ type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
 const DEV_STATES: Exclude<PopupState, 'loading'>[] = ['needs-resume', 'ready', 'showing-results'];
 
+function mergeProfileText(resumeText: string, linkedInText: string): string {
+  return linkedInText
+    ? `${resumeText}\n\n--- LinkedIn Profile ---\n\n${linkedInText}`
+    : resumeText;
+}
+
 export default function App() {
   const [state, setState] = useState<PopupState>('loading');
   const [resumeFileName, setResumeFileName] = useState('');
+  const [linkedInFileName, setLinkedInFileName] = useState('');
 
   useEffect(() => {
-    browser.storage.local.get(['resumeText', 'resumeFileName']).then((result) => {
-      if (result.resumeText) {
-        setResumeFileName((result.resumeFileName as string) ?? '');
-        setState('ready');
-      } else {
-        setState('needs-resume');
-      }
-    }).catch(() => setState('needs-resume'));
+    browser.storage.local
+      .get(['resumeText', 'resumeFileName', 'linkedInFileName'])
+      .then((result) => {
+        if (result.resumeText) {
+          setResumeFileName((result.resumeFileName as string) ?? '');
+          setLinkedInFileName((result.linkedInFileName as string) ?? '');
+          setState('ready');
+        } else {
+          setState('needs-resume');
+        }
+      })
+      .catch(() => setState('needs-resume'));
   }, []);
 
-  function handleResumeDone(fileName: string) {
+  async function handleResumeDone(fileName: string) {
+    const { resumeText = '', linkedInText = '' } = await browser.storage.local.get(['resumeText', 'linkedInText']);
+    await browser.storage.local.set({ profileText: mergeProfileText(resumeText as string, linkedInText as string) });
     setResumeFileName(fileName);
     setState('ready');
   }
 
-  function handleRemove() {
-    browser.storage.local.remove(['resumeText', 'resumeFileName']).then(() => {
-      setResumeFileName('');
-      setState('needs-resume');
-    });
+  async function handleRemove() {
+    await browser.storage.local.remove(['resumeText', 'resumeFileName', 'linkedInText', 'linkedInFileName', 'profileText']);
+    setResumeFileName('');
+    setLinkedInFileName('');
+    setState('needs-resume');
+  }
+
+  async function handleLinkedInDone(fileName: string, linkedInText: string) {
+    const { resumeText = '' } = await browser.storage.local.get(['resumeText']);
+    const profileText = mergeProfileText(resumeText as string, linkedInText);
+    await browser.storage.local.set({ linkedInText, linkedInFileName: fileName, profileText });
+    setLinkedInFileName(fileName);
+  }
+
+  async function handleLinkedInRemove() {
+    const { resumeText = '' } = await browser.storage.local.get(['resumeText']);
+    await browser.storage.local.remove(['linkedInText', 'linkedInFileName']);
+    await browser.storage.local.set({ profileText: resumeText as string });
+    setLinkedInFileName('');
   }
 
   if (state === 'loading') {
@@ -66,12 +93,22 @@ export default function App() {
 
       {/* View */}
       <div className="flex flex-col flex-1">
-        {state === 'needs-resume' && <NeedsResume onDone={handleResumeDone} />}
+        {state === 'needs-resume' && (
+          <NeedsResume
+            onDone={handleResumeDone}
+            linkedInFileName={linkedInFileName}
+            onLinkedInDone={handleLinkedInDone}
+            onLinkedInRemove={handleLinkedInRemove}
+          />
+        )}
         {state === 'ready' && (
           <Ready
             fileName={resumeFileName || 'your-resume.pdf'}
             onDone={() => setState('showing-results')}
             onRemove={handleRemove}
+            linkedInFileName={linkedInFileName}
+            onLinkedInDone={handleLinkedInDone}
+            onLinkedInRemove={handleLinkedInRemove}
           />
         )}
         {state === 'showing-results' && <ShowingResults onBack={() => setState('ready')} />}
