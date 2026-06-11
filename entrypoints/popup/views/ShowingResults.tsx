@@ -1,22 +1,23 @@
 import type { FitResult } from '../../../utils/scorer';
+import FitScore from '../../../components/FitScore';
+import DimensionRadar from '../../../components/DimensionRadar';
+import SummaryBullets from '../../../components/SummaryBullets';
 
 interface Props {
   onBack: () => void;
   result: FitResult;
 }
 
-export default function ShowingResults({ onBack }: Props) {
+export default function ShowingResults({ onBack, result }: Props) {
   return (
     <div className="flex flex-col gap-4 px-6 py-6">
-      <div className="flex items-center justify-center h-32 rounded-lg bg-gray-50 text-gray-400 text-sm">
-        Results placeholder
-      </div>
-      <div className="flex items-center justify-center h-40 rounded-lg bg-gray-50 text-gray-400 text-sm">
-        Radar chart placeholder
-      </div>
-      <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-400">
-        Summary bullets placeholder
-      </div>
+      <FitScore overall={result.overall} />
+      <DimensionRadar dimensions={result.dimensions} />
+      <SummaryBullets
+        strengths={result.strengths}
+        gaps={result.gaps}
+        suggestion={result.suggestion}
+      />
       <button
         onClick={onBack}
         className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"
