@@ -20,12 +20,13 @@ export default function App() {
   const [state, setState] = useState<PopupState>('loading');
   const [resumeFileName, setResumeFileName] = useState('');
   const [linkedInFileName, setLinkedInFileName] = useState('');
-  const [jdText, setJdText] = useState<string | null>(null);
+  const [jd, setJd] = useState<{ title: string | null; company: string | null; text: string } | null>(null);
   const [jdLoading, setJdLoading] = useState(false);
   const [pastedJd, setPastedJd] = useState('');
   const [fitResult, setFitResult] = useState<FitResult | null>(null);
   const [scoring, setScoring] = useState(false);
   const [scoreError, setScoreError] = useState<string | null>(null);
+  const [fitContext, setFitContext] = useState<{ title: string | null; company: string | null } | null>(null);
 
   useEffect(() => {
     browser.storage.local
@@ -45,7 +46,7 @@ export default function App() {
   useEffect(() => {
     if (state !== 'ready') return;
     setJdLoading(true);
-    setJdText(null);
+    setJd(null);
     (async () => {
       try {
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -54,9 +55,9 @@ export default function App() {
           target: { tabId: tab.id },
           func: extractJd,
         });
-        setJdText(results[0]?.result ?? null);
+        setJd(results[0]?.result ?? null);
       } catch {
-        setJdText(null);
+        setJd(null);
       } finally {
         setJdLoading(false);
       }
@@ -86,11 +87,12 @@ export default function App() {
 
   async function handleFit() {
     const { profileText = '' } = await browser.storage.local.get(['profileText']);
-    const jd = jdText ?? pastedJd;
+    const jdText = jd?.text ?? pastedJd;
+    setFitContext({ title: jd?.title ?? null, company: jd?.company ?? null });
     setScoring(true);
     setScoreError(null);
     try {
-      const result = await mockScoringClient.scoreFit(profileText as string, jd);
+      const result = await mockScoringClient.scoreFit(profileText as string, jdText);
       setFitResult(result);
       setState('showing-results');
     } catch (err) {
@@ -155,7 +157,7 @@ export default function App() {
             linkedInFileName={linkedInFileName}
             onLinkedInDone={handleLinkedInDone}
             onLinkedInRemove={handleLinkedInRemove}
-            jdText={jdText}
+            jd={jd}
             jdLoading={jdLoading}
             pastedJd={pastedJd}
             onJdPaste={setPastedJd}
@@ -164,7 +166,12 @@ export default function App() {
           />
         )}
         {state === 'showing-results' && fitResult && (
-          <ShowingResults onBack={() => setState('ready')} result={fitResult} />
+          <ShowingResults
+            onBack={() => setState('ready')}
+            result={fitResult}
+            title={fitContext?.title ?? null}
+            company={fitContext?.company ?? null}
+          />
         )}
       </div>
     </div>

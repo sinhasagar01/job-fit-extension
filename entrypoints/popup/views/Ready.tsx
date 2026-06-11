@@ -7,7 +7,7 @@ interface Props {
   linkedInFileName: string;
   onLinkedInDone: (fileName: string, text: string) => void;
   onLinkedInRemove: () => void;
-  jdText: string | null;
+  jd: { title: string | null; company: string | null; text: string } | null;
   jdLoading: boolean;
   pastedJd: string;
   onJdPaste: (text: string) => void;
@@ -15,8 +15,8 @@ interface Props {
   scoreError: string | null;
 }
 
-export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jdText, jdLoading, pastedJd, onJdPaste, scoring, scoreError }: Props) {
-  const hasJd = jdText !== null || pastedJd.trim().length > 0;
+export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, pastedJd, onJdPaste, scoring, scoreError }: Props) {
+  const hasJd = jd !== null || pastedJd.trim().length > 0;
 
   return (
     <div className="flex flex-col gap-4 px-6 py-6">
@@ -46,11 +46,14 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
         <div className="rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs text-gray-400">
           Detecting job description…
         </div>
-      ) : jdText !== null ? (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2">
-          <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide mb-1">Job description detected</p>
-          <p className="text-xs text-gray-700 line-clamp-3">
-            {jdText.length > 120 ? jdText.slice(0, 120) + '…' : jdText}
+      ) : jd !== null ? (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5 flex flex-col gap-1">
+          <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide">Job detected</p>
+          {jd.title && <p className="text-sm font-semibold text-gray-800 leading-tight">{jd.title}</p>}
+          {jd.company && <p className="text-xs text-gray-500">{jd.company}</p>}
+          <p className="text-[11px] text-gray-400 uppercase tracking-wide mt-0.5">About the job</p>
+          <p className="text-xs text-gray-600 line-clamp-2">
+            {jd.text.length > 150 ? jd.text.slice(0, 150) + '…' : jd.text}
           </p>
         </div>
       ) : (

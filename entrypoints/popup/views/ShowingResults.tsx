@@ -6,12 +6,19 @@ import SummaryBullets from '../../../components/SummaryBullets';
 interface Props {
   onBack: () => void;
   result: FitResult;
+  title: string | null;
+  company: string | null;
 }
 
-export default function ShowingResults({ onBack, result }: Props) {
+export default function ShowingResults({ onBack, result, title, company }: Props) {
   return (
     <div className="flex flex-col gap-4 px-6 py-6">
       <FitScore overall={result.overall} />
+      {(title || company) && (
+        <p className="text-center text-xs text-gray-400 -mt-2">
+          Fit for: {[title, company].filter(Boolean).join(' at ')}
+        </p>
+      )}
       <DimensionRadar dimensions={result.dimensions} />
       <SummaryBullets
         strengths={result.strengths}
