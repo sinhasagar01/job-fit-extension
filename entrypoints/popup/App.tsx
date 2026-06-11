@@ -4,6 +4,7 @@ import Ready from './views/Ready';
 import ShowingResults from './views/ShowingResults';
 import { extractJd } from '../../utils/extractJd';
 import { mockScoringClient } from '../../utils/mockScoringClient';
+import { createRealScoringClient } from '../../utils/realScoringClient';
 import type { FitResult } from '../../utils/scorer';
 import { getRemainingChecks, decrementCheck, exhaustChecks, resetChecks } from '../../utils/usageCounter';
 
@@ -91,13 +92,18 @@ export default function App() {
   }
 
   async function handleFit() {
-    const { profileText = '' } = await browser.storage.local.get(['profileText']);
+    const { profileText = '', geminiApiKey } = await browser.storage.local.get(['profileText', 'geminiApiKey']);
     const jdText = jd?.text ?? pastedJd;
-    setFitContext({ title: jd?.title ?? null, company: jd?.company ?? null });
+    const title = jd?.title ?? null;
+    const company = jd?.company ?? null;
+    setFitContext({ title, company });
     setScoring(true);
     setScoreError(null);
+    const client = geminiApiKey
+      ? createRealScoringClient(geminiApiKey as string)
+      : mockScoringClient;
     try {
-      const result = await mockScoringClient.scoreFit(profileText as string, jdText);
+      const result = await client.scoreFit(profileText as string, jdText, { title, company });
       const remaining = await decrementCheck();
       setChecksRemaining(remaining);
       setFitResult(result);
@@ -154,9 +160,18 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <div className="px-6 pt-4 pb-2">
-        <h1 className="text-lg font-bold text-gray-900">JobFit</h1>
-        <p className="text-xs text-gray-400">Am I a good fit for this role?</p>
+      <div className="px-6 pt-4 pb-2 flex items-start justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">JobFit</h1>
+          <p className="text-xs text-gray-400">Am I a good fit for this role?</p>
+        </div>
+        <button
+          onClick={() => browser.runtime.openOptionsPage()}
+          title="Settings"
+          className="mt-0.5 text-gray-400 hover:text-gray-600 transition-colors text-base leading-none"
+        >
+          ⚙
+        </button>
       </div>
 
       {/* View */}

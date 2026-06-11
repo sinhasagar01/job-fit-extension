@@ -13,7 +13,11 @@ export interface FitResult {
 }
 
 export interface ScoringClient {
-  scoreFit(profileText: string, jdText: string): Promise<FitResult>;
+  scoreFit(
+    profileText: string,
+    jdText: string,
+    meta?: { title?: string | null; company?: string | null }
+  ): Promise<FitResult>;
 }
 
 function clamp(n: number): number {

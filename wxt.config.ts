@@ -6,6 +6,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     permissions: ['storage', 'activeTab', 'scripting'],
+    host_permissions: ['https://generativelanguage.googleapis.com/*'],
   },
   vite: () => ({
     plugins: [tailwindcss()],
