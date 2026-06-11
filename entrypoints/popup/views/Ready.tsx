@@ -7,9 +7,15 @@ interface Props {
   linkedInFileName: string;
   onLinkedInDone: (fileName: string, text: string) => void;
   onLinkedInRemove: () => void;
+  jdText: string | null;
+  jdLoading: boolean;
+  pastedJd: string;
+  onJdPaste: (text: string) => void;
 }
 
-export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove }: Props) {
+export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jdText, jdLoading, pastedJd, onJdPaste }: Props) {
+  const hasJd = jdText !== null || pastedJd.trim().length > 0;
+
   return (
     <div className="flex flex-col gap-4 px-6 py-6">
       <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
@@ -34,13 +40,34 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
         onRemove={onLinkedInRemove}
       />
 
-      <div className="rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs text-gray-400">
-        No job description detected on this page.
-      </div>
+      {jdLoading ? (
+        <div className="rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs text-gray-400">
+          Detecting job description…
+        </div>
+      ) : jdText !== null ? (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+          <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide mb-1">Job description detected</p>
+          <p className="text-xs text-gray-700 line-clamp-3">
+            {jdText.length > 120 ? jdText.slice(0, 120) + '…' : jdText}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs text-gray-400">No job description detected — paste it here</p>
+          <textarea
+            value={pastedJd}
+            onChange={(e) => onJdPaste(e.target.value)}
+            rows={4}
+            placeholder="Paste the job description…"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700 placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+        </div>
+      )}
 
       <button
         onClick={onDone}
-        className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 active:scale-[0.98] transition-all"
+        disabled={!hasJd}
+        className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
       >
         Am I Fit?
       </button>

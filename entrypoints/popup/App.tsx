@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import NeedsResume from './views/NeedsResume';
 import Ready from './views/Ready';
 import ShowingResults from './views/ShowingResults';
+import { extractJd } from '../../utils/extractJd';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
@@ -17,6 +18,9 @@ export default function App() {
   const [state, setState] = useState<PopupState>('loading');
   const [resumeFileName, setResumeFileName] = useState('');
   const [linkedInFileName, setLinkedInFileName] = useState('');
+  const [jdText, setJdText] = useState<string | null>(null);
+  const [jdLoading, setJdLoading] = useState(false);
+  const [pastedJd, setPastedJd] = useState('');
 
   useEffect(() => {
     browser.storage.local
@@ -32,6 +36,27 @@ export default function App() {
       })
       .catch(() => setState('needs-resume'));
   }, []);
+
+  useEffect(() => {
+    if (state !== 'ready') return;
+    setJdLoading(true);
+    setJdText(null);
+    (async () => {
+      try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) throw new Error('no tab');
+        const results = await browser.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: extractJd,
+        });
+        setJdText(results[0]?.result ?? null);
+      } catch {
+        setJdText(null);
+      } finally {
+        setJdLoading(false);
+      }
+    })();
+  }, [state]);
 
   async function handleResumeDone(fileName: string) {
     const { resumeText = '', linkedInText = '' } = await browser.storage.local.get(['resumeText', 'linkedInText']);
@@ -109,6 +134,10 @@ export default function App() {
             linkedInFileName={linkedInFileName}
             onLinkedInDone={handleLinkedInDone}
             onLinkedInRemove={handleLinkedInRemove}
+            jdText={jdText}
+            jdLoading={jdLoading}
+            pastedJd={pastedJd}
+            onJdPaste={setPastedJd}
           />
         )}
         {state === 'showing-results' && <ShowingResults onBack={() => setState('ready')} />}
