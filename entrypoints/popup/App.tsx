@@ -5,6 +5,7 @@ import ShowingResults from './views/ShowingResults';
 import { extractJd } from '../../utils/extractJd';
 import { mockScoringClient } from '../../utils/mockScoringClient';
 import type { FitResult } from '../../utils/scorer';
+import { getRemainingChecks, decrementCheck, exhaustChecks, resetChecks } from '../../utils/usageCounter';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
@@ -27,11 +28,15 @@ export default function App() {
   const [scoring, setScoring] = useState(false);
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [fitContext, setFitContext] = useState<{ title: string | null; company: string | null } | null>(null);
+  const [checksRemaining, setChecksRemaining] = useState(5);
 
   useEffect(() => {
-    browser.storage.local
-      .get(['resumeText', 'resumeFileName', 'linkedInFileName'])
-      .then((result) => {
+    Promise.all([
+      browser.storage.local.get(['resumeText', 'resumeFileName', 'linkedInFileName']),
+      getRemainingChecks(),
+    ])
+      .then(([result, remaining]) => {
+        setChecksRemaining(remaining);
         if (result.resumeText) {
           setResumeFileName((result.resumeFileName as string) ?? '');
           setLinkedInFileName((result.linkedInFileName as string) ?? '');
@@ -93,6 +98,8 @@ export default function App() {
     setScoreError(null);
     try {
       const result = await mockScoringClient.scoreFit(profileText as string, jdText);
+      const remaining = await decrementCheck();
+      setChecksRemaining(remaining);
       setFitResult(result);
       setState('showing-results');
     } catch (err) {
@@ -116,7 +123,7 @@ export default function App() {
   return (
     <div className="w-95 min-h-120 bg-white flex flex-col">
       {/* Dev-only state switcher */}
-      <div className="flex gap-1 px-2 py-1.5 bg-amber-50 border-b border-amber-200">
+      <div className="flex flex-wrap gap-1 px-2 py-1.5 bg-amber-50 border-b border-amber-200">
         <span className="text-[10px] text-amber-600 font-medium self-center mr-1">DEV</span>
         {DEV_STATES.map((s) => (
           <button
@@ -131,6 +138,19 @@ export default function App() {
             {s}
           </button>
         ))}
+        <span className="text-[10px] text-amber-400 self-center mx-0.5">|</span>
+        <button
+          onClick={async () => { await exhaustChecks(); setChecksRemaining(0); }}
+          className="rounded px-2 py-0.5 text-[10px] font-mono bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+        >
+          exhaust
+        </button>
+        <button
+          onClick={async () => { await resetChecks(); setChecksRemaining(5); }}
+          className="rounded px-2 py-0.5 text-[10px] font-mono bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+        >
+          reset usage
+        </button>
       </div>
 
       {/* Header */}
@@ -163,6 +183,7 @@ export default function App() {
             onJdPaste={setPastedJd}
             scoring={scoring}
             scoreError={scoreError}
+            checksRemaining={checksRemaining}
           />
         )}
         {state === 'showing-results' && fitResult && (
