@@ -1,5 +1,8 @@
+import type { FitResult } from '../../../utils/scorer';
+
 interface Props {
   onBack: () => void;
+  result: FitResult;
 }
 
 export default function ShowingResults({ onBack }: Props) {

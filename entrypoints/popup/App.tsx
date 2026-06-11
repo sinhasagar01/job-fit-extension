@@ -3,6 +3,8 @@ import NeedsResume from './views/NeedsResume';
 import Ready from './views/Ready';
 import ShowingResults from './views/ShowingResults';
 import { extractJd } from '../../utils/extractJd';
+import { mockScoringClient } from '../../utils/mockScoringClient';
+import type { FitResult } from '../../utils/scorer';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
@@ -21,6 +23,9 @@ export default function App() {
   const [jdText, setJdText] = useState<string | null>(null);
   const [jdLoading, setJdLoading] = useState(false);
   const [pastedJd, setPastedJd] = useState('');
+  const [fitResult, setFitResult] = useState<FitResult | null>(null);
+  const [scoring, setScoring] = useState(false);
+  const [scoreError, setScoreError] = useState<string | null>(null);
 
   useEffect(() => {
     browser.storage.local
@@ -79,6 +84,22 @@ export default function App() {
     setLinkedInFileName(fileName);
   }
 
+  async function handleFit() {
+    const { profileText = '' } = await browser.storage.local.get(['profileText']);
+    const jd = jdText ?? pastedJd;
+    setScoring(true);
+    setScoreError(null);
+    try {
+      const result = await mockScoringClient.scoreFit(profileText as string, jd);
+      setFitResult(result);
+      setState('showing-results');
+    } catch (err) {
+      setScoreError(err instanceof Error ? err.message : 'Scoring failed. Please try again.');
+    } finally {
+      setScoring(false);
+    }
+  }
+
   async function handleLinkedInRemove() {
     const { resumeText = '' } = await browser.storage.local.get(['resumeText']);
     await browser.storage.local.remove(['linkedInText', 'linkedInFileName']);
@@ -129,7 +150,7 @@ export default function App() {
         {state === 'ready' && (
           <Ready
             fileName={resumeFileName || 'your-resume.pdf'}
-            onDone={() => setState('showing-results')}
+            onDone={handleFit}
             onRemove={handleRemove}
             linkedInFileName={linkedInFileName}
             onLinkedInDone={handleLinkedInDone}
@@ -138,9 +159,13 @@ export default function App() {
             jdLoading={jdLoading}
             pastedJd={pastedJd}
             onJdPaste={setPastedJd}
+            scoring={scoring}
+            scoreError={scoreError}
           />
         )}
-        {state === 'showing-results' && <ShowingResults onBack={() => setState('ready')} />}
+        {state === 'showing-results' && fitResult && (
+          <ShowingResults onBack={() => setState('ready')} result={fitResult} />
+        )}
       </div>
     </div>
   );

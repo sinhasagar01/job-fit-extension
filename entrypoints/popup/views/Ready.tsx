@@ -11,9 +11,11 @@ interface Props {
   jdLoading: boolean;
   pastedJd: string;
   onJdPaste: (text: string) => void;
+  scoring: boolean;
+  scoreError: string | null;
 }
 
-export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jdText, jdLoading, pastedJd, onJdPaste }: Props) {
+export default function Ready({ fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jdText, jdLoading, pastedJd, onJdPaste, scoring, scoreError }: Props) {
   const hasJd = jdText !== null || pastedJd.trim().length > 0;
 
   return (
@@ -66,11 +68,23 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
 
       <button
         onClick={onDone}
-        disabled={!hasJd}
+        disabled={!hasJd || scoring}
         className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
       >
-        Am I Fit?
+        {scoring ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            Analyzing…
+          </span>
+        ) : 'Am I Fit?'}
       </button>
+
+      {scoreError && (
+        <p className="text-center text-xs text-red-500">{scoreError}</p>
+      )}
 
       <p className="text-center text-xs text-gray-400">5 of 5 free checks remaining today</p>
     </div>
