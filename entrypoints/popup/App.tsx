@@ -1,14 +1,42 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import NeedsResume from './views/NeedsResume';
 import Ready from './views/Ready';
 import ShowingResults from './views/ShowingResults';
 
-type PopupState = 'needs-resume' | 'ready' | 'showing-results';
+type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
-const DEV_STATES: PopupState[] = ['needs-resume', 'ready', 'showing-results'];
+const DEV_STATES: Exclude<PopupState, 'loading'>[] = ['needs-resume', 'ready', 'showing-results'];
 
 export default function App() {
-  const [state, setState] = useState<PopupState>('needs-resume');
+  const [state, setState] = useState<PopupState>('loading');
+  const [resumeFileName, setResumeFileName] = useState('');
+
+  useEffect(() => {
+    browser.storage.local.get(['resumeText', 'resumeFileName']).then((result) => {
+      if (result.resumeText) {
+        setResumeFileName((result.resumeFileName as string) ?? '');
+        setState('ready');
+      } else {
+        setState('needs-resume');
+      }
+    });
+  }, []);
+
+  function handleResumeDone(fileName: string) {
+    setResumeFileName(fileName);
+    setState('ready');
+  }
+
+  function handleRemove() {
+    browser.storage.local.remove(['resumeText', 'resumeFileName']).then(() => {
+      setResumeFileName('');
+      setState('needs-resume');
+    });
+  }
+
+  if (state === 'loading') {
+    return <div className="w-95 min-h-120 bg-white" />;
+  }
 
   return (
     <div className="w-95 min-h-120 bg-white flex flex-col">
@@ -38,8 +66,14 @@ export default function App() {
 
       {/* View */}
       <div className="flex flex-col flex-1">
-        {state === 'needs-resume' && <NeedsResume onDone={() => setState('ready')} />}
-        {state === 'ready' && <Ready onDone={() => setState('showing-results')} />}
+        {state === 'needs-resume' && <NeedsResume onDone={handleResumeDone} />}
+        {state === 'ready' && (
+          <Ready
+            fileName={resumeFileName || 'your-resume.pdf'}
+            onDone={() => setState('showing-results')}
+            onRemove={handleRemove}
+          />
+        )}
         {state === 'showing-results' && <ShowingResults onBack={() => setState('ready')} />}
       </div>
     </div>

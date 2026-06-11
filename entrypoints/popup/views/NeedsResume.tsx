@@ -1,8 +1,33 @@
+import { useRef, useState } from 'react';
+import { parsePdf } from '../../../utils/parsePdf';
+
 interface Props {
-  onDone: () => void;
+  onDone: (fileName: string) => void;
 }
 
 export default function NeedsResume({ onDone }: Props) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<'idle' | 'parsing' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setStatus('parsing');
+    setErrorMsg('');
+
+    try {
+      const text = await parsePdf(file);
+      await browser.storage.local.set({ resumeText: text, resumeFileName: file.name });
+      onDone(file.name);
+    } catch {
+      setStatus('error');
+      setErrorMsg('Failed to parse PDF. Please try another file.');
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4 px-6 py-10 text-center">
       <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -14,13 +39,29 @@ export default function NeedsResume({ onDone }: Props) {
         <h2 className="text-base font-semibold text-gray-900">Upload your resume</h2>
         <p className="mt-1 text-sm text-gray-500">We'll use it to score your fit for any job you're viewing.</p>
       </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={status === 'parsing'}
+      />
+
       <button
-        disabled
-        className="mt-2 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white opacity-50 cursor-not-allowed"
+        onClick={() => inputRef.current?.click()}
+        disabled={status === 'parsing'}
+        className="mt-2 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Choose PDF…
+        {status === 'parsing' ? 'Parsing PDF…' : 'Choose PDF…'}
       </button>
-      <button onClick={onDone} className="text-xs text-gray-400 underline">
+
+      {status === 'error' && (
+        <p className="text-xs text-red-500">{errorMsg}</p>
+      )}
+
+      <button onClick={() => onDone('dev-skip.pdf')} className="text-xs text-gray-400 underline">
         Skip (dev only)
       </button>
     </div>
