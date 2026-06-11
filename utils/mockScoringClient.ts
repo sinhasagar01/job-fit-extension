@@ -44,7 +44,7 @@ function pick<T>(arr: T[]): T {
 export const mockScoringClient: ScoringClient = {
   async scoreFit(_profileText: string, _jdText: string): Promise<FitResult> {
     await new Promise<void>((resolve) => setTimeout(resolve, 800));
-    const overall = 5 + Math.floor(Math.random() * 5);
+    const overall = 2 + Math.floor(Math.random() * 8);
     const [s1, s2, s3] = pickDistinct(STRENGTHS, 3);
     const [g1, g2, g3] = pickDistinct(GAPS, 3);
     return validateFitResult({
