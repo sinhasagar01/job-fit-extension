@@ -28,7 +28,6 @@ export function validateFitResult(raw: unknown): FitResult {
   if (typeof raw !== 'object' || raw === null) throw new Error('Result is not an object');
   const r = raw as Record<string, unknown>;
 
-  if (typeof r.overall !== 'number') throw new Error('Missing or invalid field: overall');
   if (typeof r.dimensions !== 'object' || r.dimensions === null)
     throw new Error('Missing field: dimensions');
   const d = r.dimensions as Record<string, unknown>;
@@ -41,15 +40,24 @@ export function validateFitResult(raw: unknown): FitResult {
     throw new Error('gaps must have 3 items');
   if (typeof r.suggestion !== 'string') throw new Error('Missing field: suggestion');
 
+  const skillsMatch = clamp(d.skillsMatch as number);
+  const experienceLevel = clamp(d.experienceLevel as number);
+  const domainIndustry = clamp(d.domainIndustry as number);
+  const keywordCoverage = clamp(d.keywordCoverage as number);
+  const educationCerts = clamp(d.educationCerts as number);
+
+  // weighted mean: skills 30%, experience 25%, keywords 20%, domain 15%, education 10%
+  const overall = clamp(
+    skillsMatch * 0.30 +
+    experienceLevel * 0.25 +
+    keywordCoverage * 0.20 +
+    domainIndustry * 0.15 +
+    educationCerts * 0.10
+  );
+
   return {
-    overall: clamp(r.overall as number),
-    dimensions: {
-      skillsMatch: clamp(d.skillsMatch as number),
-      experienceLevel: clamp(d.experienceLevel as number),
-      domainIndustry: clamp(d.domainIndustry as number),
-      keywordCoverage: clamp(d.keywordCoverage as number),
-      educationCerts: clamp(d.educationCerts as number),
-    },
+    overall,
+    dimensions: { skillsMatch, experienceLevel, domainIndustry, keywordCoverage, educationCerts },
     strengths: [
       (r.strengths as string[])[0],
       (r.strengths as string[])[1],

@@ -2,10 +2,15 @@ import type { ScoringClient, FitResult } from './scorer';
 import { validateFitResult } from './scorer';
 import { buildPrompt, apiDetail, isApiKeyInvalid } from './scoringUtils';
 
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-
-export function createRealScoringClient(apiKey: string): ScoringClient {
+export function createOpenAICompatClient({
+  baseUrl,
+  model,
+  apiKey,
+}: {
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+}): ScoringClient {
   return {
     async scoreFit(
       profileText: string,
@@ -13,22 +18,26 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
       meta?: { title?: string | null; company?: string | null }
     ): Promise<FitResult> {
       const prompt = buildPrompt(profileText, jdText, meta);
+      const url = `${baseUrl}/chat/completions`;
 
-      const requestInit = {
+      const requestInit: RequestInit = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.1,
+          max_tokens: 2048,
+          response_format: { type: 'json_object' },
         }),
       };
 
       let response: Response;
       try {
-        response = await fetch(GEMINI_URL, requestInit);
+        response = await fetch(url, requestInit);
       } catch {
         throw new Error('Network error. Please check your connection.');
       }
@@ -36,7 +45,7 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
       if (response.status === 429 || response.status === 503) {
         await new Promise<void>((resolve) => setTimeout(resolve, 2000));
         try {
-          response = await fetch(GEMINI_URL, requestInit);
+          response = await fetch(url, requestInit);
         } catch {
           throw new Error('Network error. Please check your connection.');
         }
@@ -61,13 +70,12 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
       }
 
       const data = await response.json() as Record<string, unknown>;
-      const candidates = data.candidates as Array<Record<string, unknown>> | undefined;
+      const choices = data.choices as Array<Record<string, unknown>> | undefined;
+      const choice0 = choices?.[0] as Record<string, unknown> | undefined;
+      const finishReason = choice0?.finish_reason as string | undefined;
       const rawText =
         (
-          (
-            (candidates?.[0]?.content as Record<string, unknown> | undefined)
-              ?.parts as Array<Record<string, unknown>> | undefined
-          )?.[0]?.text as string | undefined
+          (choice0?.message as Record<string, unknown> | undefined)?.content as string | undefined
         ) ?? '';
 
       const cleaned = rawText
@@ -79,7 +87,22 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
       try {
         parsed = JSON.parse(cleaned);
       } catch {
-        throw new Error(`Scoring failed: unexpected response format. Please try again. (raw: ${cleaned.slice(0, 200)})`);
+        // backstop: extract outermost {...} in case there's surrounding noise
+        const first = cleaned.indexOf('{');
+        const last = cleaned.lastIndexOf('}');
+        if (first !== -1 && last > first) {
+          try {
+            parsed = JSON.parse(cleaned.slice(first, last + 1));
+          } catch {
+            // fall through to error below
+          }
+        }
+        if (parsed === undefined) {
+          const finishDetail = finishReason ? ` finish_reason=${finishReason}` : '';
+          throw new Error(
+            `Scoring failed: unexpected response format. Please try again.${finishDetail} (raw: ${cleaned.slice(0, 1000)})`
+          );
+        }
       }
 
       return validateFitResult(parsed);

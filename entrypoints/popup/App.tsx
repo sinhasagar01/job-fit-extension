@@ -5,6 +5,7 @@ import ShowingResults from './views/ShowingResults';
 import { extractJd } from '../../utils/extractJd';
 import { mockScoringClient } from '../../utils/mockScoringClient';
 import { createRealScoringClient } from '../../utils/realScoringClient';
+import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
 import { getRemainingChecks, decrementCheck, exhaustChecks, resetChecks } from '../../utils/usageCounter';
 
@@ -92,16 +93,30 @@ export default function App() {
   }
 
   async function handleFit() {
-    const { profileText = '', geminiApiKey } = await browser.storage.local.get(['profileText', 'geminiApiKey']);
+    const {
+      profileText = '',
+      fitProvider,
+      fitProviderModel,
+      fitProviderApiKey,
+      geminiApiKey,
+    } = await browser.storage.local.get(['profileText', 'fitProvider', 'fitProviderModel', 'fitProviderApiKey', 'geminiApiKey']);
     const jdText = jd?.text ?? pastedJd;
     const title = jd?.title ?? null;
     const company = jd?.company ?? null;
     setFitContext({ title, company });
     setScoring(true);
     setScoreError(null);
-    const client = geminiApiKey
-      ? createRealScoringClient(geminiApiKey as string)
-      : mockScoringClient;
+    const apiKey = fitProviderApiKey as string | undefined;
+    const provider = fitProvider as string | undefined;
+    const model = (fitProviderModel as string | undefined) || 'llama-3.3-70b-versatile';
+    const client =
+      apiKey && provider === 'groq'
+        ? createOpenAICompatClient({ baseUrl: 'https://api.groq.com/openai/v1', model, apiKey })
+        : apiKey && provider === 'gemini'
+          ? createRealScoringClient(apiKey)
+          : geminiApiKey
+            ? createRealScoringClient(geminiApiKey as string)
+            : mockScoringClient;
     try {
       const result = await client.scoreFit(profileText as string, jdText, { title, company });
       const remaining = await decrementCheck();
