@@ -26,13 +26,35 @@ export default function ShowingResults({ onBack, result, title, company }: Props
         suggestion={result.suggestion}
       />
 
-      <div className="flex flex-col gap-2 text-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">How to close the gap</p>
-        <ol className="flex flex-col gap-1.5 list-none">
+      <div
+        className="rounded-xl px-4 py-3 flex flex-col gap-2.5"
+        style={{
+          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+          border: '1px solid #fde68a',
+          boxShadow: '0 1px 4px rgba(217,119,6,0.08)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}
+          >
+            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5V1.75A.75.75 0 0 1 8 1Z" />
+            </svg>
+          </span>
+          <p className="text-xs font-semibold text-amber-800 tracking-wide uppercase">How to close the gap</p>
+        </div>
+        <ol className="flex flex-col gap-2 list-none">
           {result.actionPlan.map((item, i) => (
-            <li key={i} className="flex gap-2 text-gray-700">
-              <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
-              {item}
+            <li key={i} className="flex gap-2.5 items-start">
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold text-amber-800"
+                style={{ background: '#fde68a' }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-xs text-amber-900 leading-snug">{item}</span>
             </li>
           ))}
         </ol>

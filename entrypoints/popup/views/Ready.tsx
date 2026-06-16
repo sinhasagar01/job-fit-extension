@@ -75,7 +75,7 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
         <button
           onClick={onDone}
           disabled={!hasJd || scoring}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+          className="btn-primary w-full rounded-lg px-4 py-3 text-sm font-semibold text-white"
         >
           {scoring ? (
             <span className="flex items-center justify-center gap-2">

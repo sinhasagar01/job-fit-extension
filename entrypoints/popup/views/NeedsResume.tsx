@@ -56,7 +56,7 @@ export default function NeedsResume({ onDone, linkedInFileName, onLinkedInDone, 
       <button
         onClick={() => inputRef.current?.click()}
         disabled={status === 'parsing'}
-        className="mt-2 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-primary mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
       >
         {status === 'parsing' ? 'Parsing PDF…' : 'Choose PDF…'}
       </button>
