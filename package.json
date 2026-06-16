@@ -11,6 +11,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "icons": "node scripts/generate-icons.mjs",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
@@ -21,6 +22,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
