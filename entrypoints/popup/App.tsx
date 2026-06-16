@@ -7,11 +7,9 @@ import { mockScoringClient } from '../../utils/mockScoringClient';
 import { createRealScoringClient } from '../../utils/realScoringClient';
 import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
-import { getRemainingChecks, decrementCheck, exhaustChecks, resetChecks } from '../../utils/usageCounter';
+import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
-
-const DEV_STATES: Exclude<PopupState, 'loading'>[] = ['needs-resume', 'ready', 'showing-results'];
 
 function mergeProfileText(resumeText: string, linkedInText: string): string {
   return linkedInText
@@ -143,37 +141,6 @@ export default function App() {
 
   return (
     <div className="w-95 min-h-120 bg-white flex flex-col">
-      {/* Dev-only state switcher */}
-      <div className="flex flex-wrap gap-1 px-2 py-1.5 bg-amber-50 border-b border-amber-200">
-        <span className="text-[10px] text-amber-600 font-medium self-center mr-1">DEV</span>
-        {DEV_STATES.map((s) => (
-          <button
-            key={s}
-            onClick={() => setState(s)}
-            className={`rounded px-2 py-0.5 text-[10px] font-mono transition-colors ${
-              state === s
-                ? 'bg-amber-400 text-white'
-                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-        <span className="text-[10px] text-amber-400 self-center mx-0.5">|</span>
-        <button
-          onClick={async () => { await exhaustChecks(); setChecksRemaining(0); }}
-          className="rounded px-2 py-0.5 text-[10px] font-mono bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-        >
-          exhaust
-        </button>
-        <button
-          onClick={async () => { await resetChecks(); setChecksRemaining(5); }}
-          className="rounded px-2 py-0.5 text-[10px] font-mono bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
-        >
-          reset usage
-        </button>
-      </div>
-
       {/* Header */}
       <div className="px-6 pt-4 pb-2 flex items-start justify-between">
         <div>

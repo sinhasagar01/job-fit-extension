@@ -41,6 +41,7 @@ Return ONLY this JSON (integers 1–10 per dimension, exactly 3 strings each in 
 }
 
 export function apiDetail(body: unknown): string {
+  if (process.env.NODE_ENV !== 'development') return '';
   if (typeof body === 'object' && body !== null) {
     const err = (body as Record<string, unknown>).error;
     if (typeof err === 'object' && err !== null) {

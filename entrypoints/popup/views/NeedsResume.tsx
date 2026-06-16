@@ -71,9 +71,6 @@ export default function NeedsResume({ onDone, linkedInFileName, onLinkedInDone, 
         onRemove={onLinkedInRemove}
       />
 
-      <button onClick={() => onDone('dev-skip.pdf')} className="text-xs text-gray-400 underline">
-        Skip (dev only)
-      </button>
     </div>
   );
 }
