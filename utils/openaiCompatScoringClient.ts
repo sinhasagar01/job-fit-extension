@@ -98,9 +98,8 @@ export function createOpenAICompatClient({
           }
         }
         if (parsed === undefined) {
-          const dev = process.env.NODE_ENV === 'development';
-          const finishDetail = dev && finishReason ? ` finish_reason=${finishReason}` : '';
-          const rawDetail = dev ? ` (raw: ${cleaned.slice(0, 1000)})` : '';
+          const finishDetail = import.meta.env.DEV && finishReason ? ` finish_reason=${finishReason}` : '';
+          const rawDetail = import.meta.env.DEV ? ` (raw: ${cleaned.slice(0, 1000)})` : '';
           throw new Error(
             `Scoring failed: unexpected response format. Please try again.${finishDetail}${rawDetail}`
           );

@@ -79,7 +79,7 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
       try {
         parsed = JSON.parse(cleaned);
       } catch {
-        const rawDetail = process.env.NODE_ENV === 'development' ? ` (raw: ${cleaned.slice(0, 200)})` : '';
+        const rawDetail = import.meta.env.DEV ? ` (raw: ${cleaned.slice(0, 200)})` : '';
         throw new Error(`Scoring failed: unexpected response format. Please try again.${rawDetail}`);
       }
 
