@@ -17,6 +17,14 @@ const GAPS = [
   'No advanced degree or certification listed',
 ];
 
+const ACTION_PLANS = [
+  'Kubernetes: complete a hands-on lab (e.g. KodeKloud) and add a personal cluster project to GitHub',
+  'Cross-functional leadership: document a project where you drove alignment across teams and add it as a resume bullet',
+  'Fintech domain: contribute to an open-source fintech project or add a side project using payments APIs',
+  'System design: add a "Technical Approach" section to one resume project showing architecture decisions',
+  'Cloud infrastructure: earn the AWS Solutions Architect Associate cert and list it in education/certs',
+];
+
 const SUGGESTIONS = [
   'Tailor your bullet points to echo the exact phrasing in the JD.',
   "Add a 'Key Skills' section that mirrors the role's required stack.",
@@ -47,6 +55,7 @@ export const mockScoringClient: ScoringClient = {
     const overall = 2 + Math.floor(Math.random() * 8);
     const [s1, s2, s3] = pickDistinct(STRENGTHS, 3);
     const [g1, g2, g3] = pickDistinct(GAPS, 3);
+    const [a1, a2, a3] = pickDistinct(ACTION_PLANS, 3);
     return validateFitResult({
       overall,
       dimensions: {
@@ -59,6 +68,7 @@ export const mockScoringClient: ScoringClient = {
       strengths: [s1, s2, s3],
       gaps: [g1, g2, g3],
       suggestion: pick(SUGGESTIONS),
+      actionPlan: [a1, a2, a3],
     });
   },
 };

@@ -27,6 +27,7 @@ Most real candidates score 4–7. A score of 8+ requires specific evidence from 
    - domainIndustry: candidate's industry/domain background vs. the role's domain
    - educationCerts: relevance of degrees, certifications, or equivalent training
 3. Do NOT include an overall score — it will be computed from your dimension scores.
+4. Provide 2–3 actionPlan items ordered by impact on the fit score (highest impact first). Each is a single sentence grounded in THIS specific JD and resume: name the exact missing skill, tool, or area called out in the job description, then give one concrete next step (what to learn, build, or add to the resume). Reference the actual technology or requirement by name — not "learn cloud" but "earn AWS Solutions Architect Associate cert to address the cloud infrastructure gap listed in the JD".
 
 Job: ${job}
 
@@ -36,8 +37,8 @@ ${profileText.slice(0, PROFILE_CHAR_LIMIT)}
 === JOB DESCRIPTION ===
 ${jdText.slice(0, JD_CHAR_LIMIT)}
 
-Return ONLY this JSON (integers 1–10 per dimension, exactly 3 strings each in strengths/gaps):
-{"dimensions":{"skillsMatch":<int>,"experienceLevel":<int>,"domainIndustry":<int>,"keywordCoverage":<int>,"educationCerts":<int>},"strengths":["…","…","…"],"gaps":["…","…","…"],"suggestion":"…"}`;
+Return ONLY this JSON (integers 1–10 per dimension, exactly 3 strings each in strengths/gaps, 2–3 strings in actionPlan):
+{"dimensions":{"skillsMatch":<int>,"experienceLevel":<int>,"domainIndustry":<int>,"keywordCoverage":<int>,"educationCerts":<int>},"strengths":["…","…","…"],"gaps":["…","…","…"],"suggestion":"…","actionPlan":["<skill/area>: <concrete next step>","…"]}`;
 }
 
 export function apiDetail(body: unknown): string {

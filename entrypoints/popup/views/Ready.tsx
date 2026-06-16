@@ -71,16 +71,7 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
         </div>
       )}
 
-      {exhausted ? (
-        <a
-          href="https://example.com/upgrade"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 px-4 py-3 text-sm font-semibold text-white text-center hover:from-violet-600 hover:to-indigo-600 active:scale-[0.98] transition-all block"
-        >
-          Upgrade for unlimited checks →
-        </a>
-      ) : (
+      {!exhausted && (
         <button
           onClick={onDone}
           disabled={!hasJd || scoring}
@@ -104,7 +95,7 @@ export default function Ready({ fileName, onDone, onRemove, linkedInFileName, on
 
       <p className="text-center text-xs text-gray-400">
         {exhausted
-          ? 'No free checks remaining today'
+          ? '0 of 5 free checks used today · resets tomorrow'
           : `${checksRemaining} of 5 free checks remaining today`}
       </p>
     </div>

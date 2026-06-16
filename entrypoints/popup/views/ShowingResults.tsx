@@ -25,6 +25,19 @@ export default function ShowingResults({ onBack, result, title, company }: Props
         gaps={result.gaps}
         suggestion={result.suggestion}
       />
+
+      <div className="flex flex-col gap-2 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">How to close the gap</p>
+        <ol className="flex flex-col gap-1.5 list-none">
+          {result.actionPlan.map((item, i) => (
+            <li key={i} className="flex gap-2 text-gray-700">
+              <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
+              {item}
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <button
         onClick={onBack}
         className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"
