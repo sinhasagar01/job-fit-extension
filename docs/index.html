@@ -201,31 +201,60 @@
   /* ---------- DEVICE SCREENSHOT ---------- */
   .device-screenshot { width: 100%; height: auto; display: block; border-radius: 12px; }
 
-  /* ---------- STEPS ---------- */
+  /* ---------- STEPPER ---------- */
   .steps-sec { background: linear-gradient(180deg, var(--white), var(--lavender) 140%); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .step-row {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 56px; align-items: center;
-    max-width: 960px; margin: 0 auto 72px;
+
+  .step-rail { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; }
+  .step-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 100px; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    background: var(--lavender); color: var(--ink-soft);
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
-  .step-row--flip .step-copy { order: 2; }
-  .step-row--flip .step-img  { order: 1; }
-  .step-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--lavender); color: var(--indigo);
-    font-weight: 700; font-size: 0.9rem; margin-bottom: 14px;
+  .step-pill:hover { background: var(--lavender-deep); color: var(--ink); }
+  .step-pill.active { background: var(--indigo); color: white; box-shadow: 0 4px 14px rgba(79,70,229,0.28); }
+  .step-pill .pill-num {
+    font-size: 12px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(255,255,255,0.22); display: grid; place-items: center; flex-shrink: 0;
   }
-  .step-copy h3 { font-size: 1.3rem; margin-bottom: 10px; letter-spacing: -0.01em; }
-  .step-copy p  { font-size: 15px; color: var(--ink-soft); line-height: 1.65; }
-  .step-img img {
-    width: 100%; height: auto; display: block;
-    border-radius: 14px; box-shadow: 0 6px 32px rgba(79,70,229,.13);
+  .step-pill:not(.active) .pill-num { background: var(--lavender-deep); color: var(--indigo); }
+
+  .step-stage { display: grid; max-width: 900px; margin: 0 auto 36px; }
+  .step-panel {
+    grid-area: 1 / 1;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: center;
+    opacity: 0; pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.38s ease, transform 0.38s ease;
   }
+  .step-panel.active { opacity: 1; pointer-events: auto; transform: none; }
+  .step-copy-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--indigo); margin-bottom: 14px; }
+  .step-copy h3 { font-family: 'Fraunces', Georgia, serif; font-size: 1.45rem; font-weight: 600; margin-bottom: 12px; letter-spacing: -0.015em; }
+  .step-copy p  { font-size: 15.5px; color: var(--ink-soft); line-height: 1.65; }
+  .step-img img { width: 100%; height: auto; display: block; border-radius: 14px; box-shadow: 0 6px 32px rgba(79,70,229,.13); }
+
+  .step-controls { display: flex; align-items: center; justify-content: center; gap: 20px; max-width: 900px; margin: 0 auto; }
+  .step-arrow {
+    width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line);
+    background: var(--white); color: var(--ink); cursor: pointer;
+    display: grid; place-items: center;
+    transition: border-color 0.2s, color 0.2s, transform 0.15s;
+  }
+  .step-arrow:hover:not(:disabled) { border-color: var(--indigo); color: var(--indigo); transform: scale(1.08); }
+  .step-arrow:disabled { opacity: 0.32; cursor: default; }
+  .step-progress { font-size: 14px; font-weight: 600; color: var(--ink-soft); min-width: 44px; text-align: center; }
+
   @media (max-width: 720px) {
-    .step-row { grid-template-columns: 1fr; gap: 24px; margin-bottom: 48px; }
-    .step-row .step-img  { order: 1; }
-    .step-row .step-copy { order: 2; }
+    .step-pill .pill-label { display: none; }
+    .step-pill { padding: 9px 14px; }
+    .step-panel { grid-template-columns: 1fr; gap: 22px; }
+    .step-panel .step-img  { order: 1; }
+    .step-panel .step-copy { order: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .step-panel, .step-pill, .step-arrow { transition: none !important; }
   }
 
   /* ---------- FEATURES ---------- */
@@ -348,59 +377,68 @@
       <h2>From résumé to verdict in five steps.</h2>
       <p>No copy-pasting, no dashboards, no account. Upload once, open a job, get an honest score.</p>
     </div>
-    <div class="step-row reveal">
-      <div class="step-copy">
-        <span class="step-num">1</span>
-        <h3>Upload your résumé</h3>
-        <p>Add your PDF once. It's parsed locally and reused for every job you check — nothing uploaded.</p>
+    <!-- Pill rail -->
+    <div class="step-rail" role="tablist" aria-label="Steps">
+      <button class="step-pill active" role="tab" aria-selected="true"  data-step="0"><span class="pill-num">1</span><span class="pill-label">Upload</span></button>
+      <button class="step-pill"        role="tab" aria-selected="false" data-step="1"><span class="pill-num">2</span><span class="pill-label">Open a job</span></button>
+      <button class="step-pill"        role="tab" aria-selected="false" data-step="2"><span class="pill-num">3</span><span class="pill-label">Am I Fit?</span></button>
+      <button class="step-pill"        role="tab" aria-selected="false" data-step="3"><span class="pill-num">4</span><span class="pill-label">Your score</span></button>
+      <button class="step-pill"        role="tab" aria-selected="false" data-step="4"><span class="pill-num">5</span><span class="pill-label">Action plan</span></button>
+    </div>
+
+    <!-- Stage -->
+    <div class="step-stage" role="tabpanel">
+      <div class="step-panel active">
+        <div class="step-copy">
+          <div class="step-copy-label">Step 1 of 5</div>
+          <h3>Upload once</h3>
+          <p>Add your resume PDF; parsed locally, never uploaded.</p>
+        </div>
+        <div class="step-img"><img src="assets/step-1.png" alt="Upload your resume" loading="lazy"></div>
       </div>
-      <div class="step-img">
-        <img src="assets/onboarding-2.png" alt="Upload your résumé" loading="lazy">
+      <div class="step-panel">
+        <div class="step-copy">
+          <div class="step-copy-label">Step 2 of 5</div>
+          <h3>Open any job</h3>
+          <p>JobFit auto-detects the role from the page you're on.</p>
+        </div>
+        <div class="step-img"><img src="assets/step-2.png" alt="Open any job listing" loading="lazy"></div>
+      </div>
+      <div class="step-panel">
+        <div class="step-copy">
+          <div class="step-copy-label">Step 3 of 5</div>
+          <h3>Ask "Am I Fit?"</h3>
+          <p>One click scores your resume against the open role.</p>
+        </div>
+        <div class="step-img"><img src="assets/step-3.png" alt="Click Am I Fit?" loading="lazy"></div>
+      </div>
+      <div class="step-panel">
+        <div class="step-copy">
+          <div class="step-copy-label">Step 4 of 5</div>
+          <h3>See your fit score</h3>
+          <p>A 1–10 score with a five-dimension radar breakdown.</p>
+        </div>
+        <div class="step-img"><img src="assets/step-4.png" alt="Your fit score" loading="lazy"></div>
+      </div>
+      <div class="step-panel">
+        <div class="step-copy">
+          <div class="step-copy-label">Step 5 of 5</div>
+          <h3>Close the gap</h3>
+          <p>Specific, prioritized steps to become a stronger candidate.</p>
+        </div>
+        <div class="step-img"><img src="assets/step-5.png" alt="Action plan" loading="lazy"></div>
       </div>
     </div>
 
-    <div class="step-row step-row--flip reveal">
-      <div class="step-copy">
-        <span class="step-num">2</span>
-        <h3>Open any job listing</h3>
-        <p>Navigate to a posting on LinkedIn, Greenhouse, Lever, Ashby, or any job page.</p>
-      </div>
-      <div class="step-img">
-        <img src="assets/onboarding-3.png" alt="Open a job listing" loading="lazy">
-      </div>
-    </div>
-
-    <div class="step-row reveal">
-      <div class="step-copy">
-        <span class="step-num">3</span>
-        <h3>Click "Analyze fit"</h3>
-        <p>One tap in the toolbar popup. JobFit reads the job description straight from the page.</p>
-      </div>
-      <div class="step-img">
-        <img src="assets/onboarding-4.png" alt="Click analyze fit" loading="lazy">
-      </div>
-    </div>
-
-    <div class="step-row step-row--flip reveal">
-      <div class="step-copy">
-        <span class="step-num">4</span>
-        <h3>See your score</h3>
-        <p>A color-coded 1–10 score with a radar chart breaking down fit across five dimensions.</p>
-      </div>
-      <div class="step-img">
-        <img src="assets/onboarding-5.png" alt="Your fit score" loading="lazy">
-      </div>
-    </div>
-
-    <div class="step-row reveal">
-      <div class="step-copy">
-        <span class="step-num">5</span>
-        <h3>Act on the gaps</h3>
-        <p>Concrete, prioritized steps grounded in your actual resume and the real job description.</p>
-      </div>
-      <div class="step-img">
-        <img src="assets/onboarding-6.png" alt="Action plan" loading="lazy">
-      </div>
+    <!-- Prev / progress / next -->
+    <div class="step-controls">
+      <button class="step-arrow" id="stepPrev" aria-label="Previous step" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="step-progress" id="stepProgress">1 / 5</span>
+      <button class="step-arrow" id="stepNext" aria-label="Next step">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
   </div>
 </section>
@@ -493,6 +531,36 @@
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Interactive stepper
+  (function () {
+    const pills  = document.querySelectorAll('.step-pill');
+    const panels = document.querySelectorAll('.step-panel');
+    const prev   = document.getElementById('stepPrev');
+    const next   = document.getElementById('stepNext');
+    const prog   = document.getElementById('stepProgress');
+    let cur = 0;
+
+    function goTo(n) {
+      pills[cur].classList.remove('active');  pills[cur].setAttribute('aria-selected', 'false');
+      panels[cur].classList.remove('active');
+      cur = n;
+      pills[cur].classList.add('active');     pills[cur].setAttribute('aria-selected', 'true');
+      panels[cur].classList.add('active');
+      prog.textContent = (cur + 1) + ' / 5';
+      prev.disabled = cur === 0;
+      next.disabled = cur === panels.length - 1;
+    }
+
+    pills.forEach((pill, i) => pill.addEventListener('click', () => goTo(i)));
+    prev.addEventListener('click', () => { if (cur > 0) goTo(cur - 1); });
+    next.addEventListener('click', () => { if (cur < panels.length - 1) goTo(cur + 1); });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft'  && cur > 0)                 goTo(cur - 1);
+      if (e.key === 'ArrowRight' && cur < panels.length - 1) goTo(cur + 1);
+    });
+  })();
 </script>
 
 </body>
