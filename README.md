@@ -91,8 +91,3 @@ npm run build      # Production build for Chrome
 npm run compile    # Type-check only (no emit)
 ```
 
----
-
-## Architecture
-
-For a guided tour of the codebase — extension contexts, WXT conventions, the scoring pipeline, and storage design — see [ARCHITECTURE.md](ARCHITECTURE.md).
