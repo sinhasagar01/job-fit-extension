@@ -198,25 +198,35 @@
   .sec-head h2 { font-size: clamp(30px, 4vw, 42px); margin-bottom: 18px; }
   .sec-head p { font-size: 17.5px; color: var(--ink-soft); }
 
+  /* ---------- DEVICE SCREENSHOT ---------- */
+  .device-screenshot { width: 100%; height: auto; display: block; border-radius: 12px; }
+
   /* ---------- STEPS ---------- */
   .steps-sec { background: linear-gradient(180deg, var(--white), var(--lavender) 140%); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; counter-reset: step; }
-  @media (max-width: 880px) { .steps { grid-template-columns: repeat(2,1fr); } }
-  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
-  .step {
-    position: relative; background: var(--white); border: 1px solid var(--line);
-    border-radius: 16px; padding: 24px 20px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  .step-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 56px; align-items: center;
+    max-width: 960px; margin: 0 auto 72px;
   }
-  .step:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(30,27,75,0.08); border-color: var(--lavender-deep); }
+  .step-row--flip .step-copy { order: 2; }
+  .step-row--flip .step-img  { order: 1; }
   .step-num {
-    font-family:'Fraunces',serif; font-size: 14px; font-weight: 600;
-    width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
     background: var(--lavender); color: var(--indigo);
-    display: grid; place-items: center; margin-bottom: 16px;
+    font-weight: 700; font-size: 0.9rem; margin-bottom: 14px;
   }
-  .step h3 { font-size: 17px; margin-bottom: 8px; letter-spacing: -0.01em; }
-  .step p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; }
+  .step-copy h3 { font-size: 1.3rem; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .step-copy p  { font-size: 15px; color: var(--ink-soft); line-height: 1.65; }
+  .step-img img {
+    width: 100%; height: auto; display: block;
+    border-radius: 14px; box-shadow: 0 6px 32px rgba(79,70,229,.13);
+  }
+  @media (max-width: 720px) {
+    .step-row { grid-template-columns: 1fr; gap: 24px; margin-bottom: 48px; }
+    .step-row .step-img  { order: 1; }
+    .step-row .step-copy { order: 2; }
+  }
 
   /* ---------- FEATURES ---------- */
   .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
@@ -307,28 +317,7 @@
     <div class="device-zone">
       <div class="device-frame">
         <span class="device-label"><span class="pulse"></span> Your device</span>
-        <div class="mock">
-          <div class="mock-head">
-            <div class="l">
-              <span class="mock-logo"><svg width="15" height="15" viewBox="0 0 18 18" fill="white"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg></span>
-              <div><div class="mock-name">JobFit</div><div class="mock-tag">Senior Frontend Engineer</div></div>
-            </div>
-            <span class="mock-gear"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.89.06 2.04-.95 2.29-1.56.38-1.56 2.6 0 2.98.95.23 1.49 1.4.95 2.29-.84 1.37.73 2.94 2.1 2.1.89-.54 2.04-.06 2.29.95.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.29c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg></span>
-          </div>
-          <div class="score-row">
-            <div class="score-ring"><span class="score-num">9<span>/10</span></span></div>
-            <div class="score-meta">
-              <div class="t">Overall fit</div>
-              <div class="role">Strong match</div>
-            </div>
-          </div>
-          <div class="dims">
-            <div class="dim"><span class="lbl">Skills</span><span class="bar"><span class="fill" style="width:92%"></span></span></div>
-            <div class="dim"><span class="lbl">Experience</span><span class="bar"><span class="fill" style="width:95%"></span></span></div>
-            <div class="dim"><span class="lbl">Domain</span><span class="bar"><span class="fill" style="width:74%"></span></span></div>
-            <div class="dim"><span class="lbl">Keywords</span><span class="bar"><span class="fill" style="width:80%"></span></span></div>
-          </div>
-        </div>
+        <img src="assets/onboarding-1.png" alt="JobFit extension popup" class="device-screenshot" loading="eager">
         <!-- the data-does-not-leave signature -->
         <div class="nocross">
           <span class="chip"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="color:var(--green)"><path d="M5 9V7a5 5 0 0110 0v2h1a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1v-7a1 1 0 011-1h1zm2 0h6V7a3 3 0 00-6 0v2z"/></svg> Resume</span>
@@ -359,31 +348,58 @@
       <h2>Five steps. A few seconds.</h2>
       <p>No copy-pasting, no dashboards, no sign-up. Open a job, ask one question, get a real answer.</p>
     </div>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step-num">1</div>
-        <h3>Upload once</h3>
-        <p>Add your resume as a PDF. It's parsed locally and reused for every job you check.</p>
+    <div class="step-row reveal">
+      <div class="step-copy">
+        <span class="step-num">1</span>
+        <h3>Upload your résumé</h3>
+        <p>Add your PDF once. It's parsed locally and reused for every job you check — nothing uploaded.</p>
       </div>
-      <div class="step reveal">
-        <div class="step-num">2</div>
-        <h3>Open any job</h3>
-        <p>Land on a posting and JobFit detects the role and description automatically.</p>
+      <div class="step-img">
+        <img src="assets/onboarding-2.png" alt="Upload your résumé" loading="lazy">
       </div>
-      <div class="step reveal">
-        <div class="step-num">3</div>
-        <h3>Ask "Am I Fit?"</h3>
-        <p>One tap runs the analysis, scoring your resume against the open role.</p>
+    </div>
+
+    <div class="step-row step-row--flip reveal">
+      <div class="step-copy">
+        <span class="step-num">2</span>
+        <h3>Open any job listing</h3>
+        <p>Navigate to a posting on LinkedIn, Greenhouse, Lever, Ashby, or any job page.</p>
       </div>
-      <div class="step reveal">
-        <div class="step-num">4</div>
+      <div class="step-img">
+        <img src="assets/onboarding-3.png" alt="Open a job listing" loading="lazy">
+      </div>
+    </div>
+
+    <div class="step-row reveal">
+      <div class="step-copy">
+        <span class="step-num">3</span>
+        <h3>Click "Analyze fit"</h3>
+        <p>One tap in the toolbar popup. JobFit reads the job description straight from the page.</p>
+      </div>
+      <div class="step-img">
+        <img src="assets/onboarding-4.png" alt="Click analyze fit" loading="lazy">
+      </div>
+    </div>
+
+    <div class="step-row step-row--flip reveal">
+      <div class="step-copy">
+        <span class="step-num">4</span>
         <h3>See your score</h3>
-        <p>A 1–10 fit score with a five-dimension breakdown of where you're strong.</p>
+        <p>A color-coded 1–10 score with a radar chart breaking down fit across five dimensions.</p>
       </div>
-      <div class="step reveal">
-        <div class="step-num">5</div>
-        <h3>Close the gap</h3>
-        <p>Concrete, prioritized steps to become a stronger candidate for the role.</p>
+      <div class="step-img">
+        <img src="assets/onboarding-5.png" alt="Your fit score" loading="lazy">
+      </div>
+    </div>
+
+    <div class="step-row reveal">
+      <div class="step-copy">
+        <span class="step-num">5</span>
+        <h3>Act on the gaps</h3>
+        <p>Concrete, prioritized steps grounded in your actual resume and the real job description.</p>
+      </div>
+      <div class="step-img">
+        <img src="assets/onboarding-6.png" alt="Action plan" loading="lazy">
       </div>
     </div>
   </div>
