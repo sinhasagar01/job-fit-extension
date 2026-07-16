@@ -136,7 +136,12 @@ Touches core scoring. Human-reviewed; no autonomous loops.
 
 The interview-critical work. Build the eval harness by hand; do not automate the tuning.
 
-## Task 3.1 — Eval harness
+## Task 3.1 — Eval harness 🚧 Blocked (needs API keys)
+
+> Harness, 6 fit-spanning pairs, deterministic stats (unit-tested), and the
+> `vite-node` runner are built and committed. **Blocked** on the last
+> deliverable — recording the real Gemini/Groq baselines — which needs API keys
+> and live calls. Run per `eval/README.md`, then commit `eval/baselines/*.json`.
 
 **Deliverables**
 - 5–8 fixed (resume, JD) pairs spanning the range: strong fit, mid fit, weak fit
@@ -148,7 +153,13 @@ Running the harness twice on the same pairs produces comparable statistics — t
 
 ---
 
-## Task 3.2 — Groq score consistency
+## Task 3.2 — Groq score consistency 🚧 Blocked (needs API keys)
+
+> Experiment tooling (temperature/seed knobs, `--temperature`/`--seed` flags,
+> `eval:compare`), the one-change-at-a-time plan, and the **agreed bound**
+> (per-dimension stddev ≤ 1.0, overall ≤ 0.75) are ready. **Blocked** on running
+> the experiments against real Groq/Gemini, which needs API keys. Once a config
+> meets the bound, lock it in at `createOpenAICompatClient`'s call site.
 
 **Deliverables**
 - Diagnose the variance source (temperature, prompt adherence, model choice) using the harness

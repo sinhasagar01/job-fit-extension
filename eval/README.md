@@ -41,9 +41,9 @@ as the recorded baselines for Task 3.1 — they contain only scores, no secrets.
 
 **Goal:** get per-run score variance on identical input under an agreed bound.
 
-**Proposed bound (agree before starting):** max per-dimension `stddev ≤ 1.0`
-and overall `stddev ≤ 0.75` across N=5 runs. `eval:compare` checks the
-per-dimension bound and exits non-zero if exceeded.
+**Agreed bound:** max per-dimension `stddev ≤ 1.0` and overall `stddev ≤ 0.75`
+across N=5 runs. `eval:compare` checks the per-dimension bound and exits
+non-zero if exceeded.
 
 **Suspected variance sources** (static diagnosis):
 - `temperature: 0.1` — non-zero sampling → the primary source. Lever: `0`.
