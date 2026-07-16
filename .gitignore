@@ -17,6 +17,9 @@ web-ext.config.ts
 # Build artifacts (e.g. `npm run zip` output)
 *.zip
 
+# Throwaway mock eval baseline (real gemini/groq baselines are committed)
+eval/baselines/mock.json
+
 # Local-only docs (not part of the tracked project)
 ARCHITECTURE.md
 AGENTS.md
