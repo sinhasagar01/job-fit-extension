@@ -37,6 +37,43 @@ and per-pair aggregates). **Commit `baselines/gemini.json` and `baselines/groq.j
 as the recorded baselines for Task 3.1 — they contain only scores, no secrets.
 `baselines/mock.json` is throwaway (gitignored).
 
+## Task 3.2 — Groq variance experiments
+
+**Goal:** get per-run score variance on identical input under an agreed bound.
+
+**Proposed bound (agree before starting):** max per-dimension `stddev ≤ 1.0`
+and overall `stddev ≤ 0.75` across N=5 runs. `eval:compare` checks the
+per-dimension bound and exits non-zero if exceeded.
+
+**Suspected variance sources** (static diagnosis):
+- `temperature: 0.1` — non-zero sampling → the primary source. Lever: `0`.
+- no `seed` — Groq's OpenAI-compatible API supports a fixed `seed`. Lever: set one.
+- model choice (`llama-3.3-70b-versatile`).
+
+**Run one change at a time**, recording each baseline, then compare:
+
+```bash
+# 0. Baseline (shipped defaults)
+GROQ_API_KEY=… npm run eval -- --provider groq --runs 5
+cp eval/baselines/groq.json eval/baselines/groq-baseline.json
+
+# 1. temperature 0
+GROQ_API_KEY=… npm run eval -- --provider groq --runs 5 --temperature 0
+cp eval/baselines/groq.json eval/baselines/groq-temp0.json
+npm run eval:compare -- eval/baselines/groq-baseline.json eval/baselines/groq-temp0.json
+
+# 2. add a fixed seed
+GROQ_API_KEY=… npm run eval -- --provider groq --runs 5 --temperature 0 --seed 7
+npm run eval:compare -- eval/baselines/groq-temp0.json eval/baselines/groq.json
+
+# 3. try another model
+GROQ_API_KEY=… npm run eval -- --provider groq --runs 5 --temperature 0 --model <other>
+```
+
+The client knobs (`--temperature`, `--seed`; `EVAL_TEMPERATURE`/`EVAL_SEED`)
+are backward-compatible — the shipped defaults are unchanged until you decide
+which config wins and update `createOpenAICompatClient`'s call site.
+
 ## Harness stability
 
 The aggregation math is pure and deterministic (`stats.test.ts` pins it), so any

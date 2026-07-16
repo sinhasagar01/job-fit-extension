@@ -6,10 +6,16 @@ export function createOpenAICompatClient({
   baseUrl,
   model,
   apiKey,
+  temperature = 0.1,
+  seed,
 }: {
   baseUrl: string;
   model: string;
   apiKey: string;
+  /** Sampling temperature. Defaults to 0.1 (shipped behaviour). */
+  temperature?: number;
+  /** Optional fixed seed for near-deterministic output (Task 3.2 experiments). */
+  seed?: number;
 }): ScoringClient {
   return {
     async scoreFit(
@@ -29,9 +35,10 @@ export function createOpenAICompatClient({
         body: JSON.stringify({
           model,
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.1,
+          temperature,
           max_tokens: 2048,
           response_format: { type: 'json_object' },
+          ...(seed !== undefined ? { seed } : {}),
         }),
       };
 

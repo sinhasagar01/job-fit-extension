@@ -13,6 +13,8 @@ interface Config {
   provider: Provider;
   runs: number;
   model: string;
+  temperature: number;
+  seed?: number;
 }
 
 function parseConfig(argv: string[]): Config {
@@ -23,25 +25,40 @@ function parseConfig(argv: string[]): Config {
   const provider = (get('--provider') ?? process.env.EVAL_PROVIDER ?? 'mock') as Provider;
   const runs = Number(get('--runs') ?? process.env.EVAL_RUNS ?? 5);
   const model = get('--model') ?? process.env.EVAL_MODEL ?? 'llama-3.3-70b-versatile';
+  const temperature = Number(get('--temperature') ?? process.env.EVAL_TEMPERATURE ?? 0.1);
+  const seedRaw = get('--seed') ?? process.env.EVAL_SEED;
+  const seed = seedRaw === undefined ? undefined : Number(seedRaw);
   if (!['gemini', 'groq', 'mock'].includes(provider)) {
     throw new Error(`Unknown --provider "${provider}" (expected gemini | groq | mock)`);
   }
   if (!Number.isFinite(runs) || runs < 1) {
     throw new Error(`--runs must be a positive integer (got "${runs}")`);
   }
-  return { provider, runs, model };
+  if (!Number.isFinite(temperature)) {
+    throw new Error(`--temperature must be a number (got "${temperature}")`);
+  }
+  if (seed !== undefined && !Number.isFinite(seed)) {
+    throw new Error(`--seed must be a number (got "${seedRaw}")`);
+  }
+  return { provider, runs, model, temperature, seed };
 }
 
-function buildClient({ provider, model }: Config): ScoringClient {
+function buildClient({ provider, model, temperature, seed }: Config): ScoringClient {
   if (provider === 'mock') return mockScoringClient;
   if (provider === 'gemini') {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new Error('Set GEMINI_API_KEY to run the gemini provider.');
-    return createRealScoringClient(key);
+    return createRealScoringClient(key, temperature);
   }
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error('Set GROQ_API_KEY to run the groq provider.');
-  return createOpenAICompatClient({ baseUrl: 'https://api.groq.com/openai/v1', model, apiKey: key });
+  return createOpenAICompatClient({
+    baseUrl: 'https://api.groq.com/openai/v1',
+    model,
+    apiKey: key,
+    temperature,
+    seed,
+  });
 }
 
 const f2 = (n: number) => (Number.isNaN(n) ? '  n/a' : n.toFixed(2).padStart(5));
@@ -62,6 +79,7 @@ async function main(): Promise<void> {
   const client = buildClient(config);
   console.log(
     `Eval: provider=${config.provider}${config.provider === 'groq' ? ` model=${config.model}` : ''} ` +
+      `temp=${config.temperature}${config.seed !== undefined ? ` seed=${config.seed}` : ''} ` +
       `runs=${config.runs} pairs=${EVAL_PAIRS.length}`
   );
 
@@ -95,7 +113,15 @@ async function main(): Promise<void> {
 
   // `new Date()` is fine here (plain Node via vite-node, not a workflow script).
   const stamp = new Date().toISOString();
-  const baseline = { provider: config.provider, model: config.provider === 'groq' ? config.model : null, runs: config.runs, timestamp: stamp, pairs: report };
+  const baseline = {
+    provider: config.provider,
+    model: config.provider === 'groq' ? config.model : null,
+    temperature: config.temperature,
+    seed: config.seed ?? null,
+    runs: config.runs,
+    timestamp: stamp,
+    pairs: report,
+  };
   const dir = resolve(process.cwd(), 'eval/baselines');
   mkdirSync(dir, { recursive: true });
   const out = resolve(dir, `${config.provider}.json`);

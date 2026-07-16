@@ -5,7 +5,7 @@ import { buildPrompt, apiDetail, isApiKeyInvalid } from './scoringUtils';
 const GEMINI_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-export function createRealScoringClient(apiKey: string): ScoringClient {
+export function createRealScoringClient(apiKey: string, temperature = 0.1): ScoringClient {
   return {
     async scoreFit(
       profileText: string,
@@ -22,7 +22,7 @@ export function createRealScoringClient(apiKey: string): ScoringClient {
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
+          generationConfig: { temperature, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
         }),
       };
 
