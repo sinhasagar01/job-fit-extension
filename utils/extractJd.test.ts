@@ -90,37 +90,51 @@ describe('extractJd — Ashby (API special-case)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Known-working sites: exercised through their dedicated selectors, which are
-// tried before the fallback. These lock the selector contract so the fallback
-// changes can't silently regress selector-matched sites.
+// Real Greenhouse + Lever fixtures. Capturing these revealed the original
+// selectors were stale: Greenhouse migrated to job-boards.greenhouse.io (the
+// old h1.app-title / .job__description no longer match — the h1 + readability
+// fallback carry it), and Lever dropped .posting-description in favour of
+// data-qa blocks that the code now concatenates.
 // ---------------------------------------------------------------------------
 
-describe('extractJd — known-selector sites (regression guards)', () => {
-  const body = (html: string) =>
-    new JSDOM(`<!doctype html><html><head><title>Job</title></head><body>${html}</body></html>`)
-      .window.document;
-  const filler =
-    'We are looking for an experienced engineer to join our team. '.repeat(6); // > 200 chars
+describe('extractJd — real Greenhouse + Lever fixtures', () => {
+  it('Greenhouse (new job-boards template): extracts the full JD via h1 + fallback', async () => {
+    const result = await extractJd(
+      docFrom('greenhouse-reddit.html'),
+      'https://job-boards.greenhouse.io/reddit/jobs/8012700'
+    );
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe('Acquisition Account Manager, Mid-Market EMEA');
+    expect(result!.text).toContain('Reddit is a community of communities');
+    expect(result!.text.length).toBeGreaterThan(1000);
+  });
 
-  it('LinkedIn: reads #job-details', async () => {
-    const doc = body(`<h1 class="top-card-layout__title">Staff Engineer</h1><div id="job-details">${filler}</div>`);
+  it('Lever (data-qa blocks): concatenates the whole JD, not just the densest section', async () => {
+    const result = await extractJd(
+      docFrom('lever-palantir.html'),
+      'https://jobs.lever.co/palantir/dab396d4-2f14-4796-aac0-0d82883dccf0'
+    );
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe('Forward Deployed Software Engineer');
+    // Whole JD present (company blurb + requirements), not the 477-char fragment
+    // the density heuristic alone would pick.
+    expect(result!.text).toContain('Palantir builds the world');
+    expect(result!.text.length).toBeGreaterThan(3000);
+  });
+});
+
+// LinkedIn uses a persistent #job-details container. Its markup is gated/JS and
+// couldn't be captured as a real fixture here, so this stays a synthetic guard
+// on the selector path — flagged as unverified against live LinkedIn markup.
+describe('extractJd — LinkedIn selector guard (synthetic, unverified vs live)', () => {
+  it('reads #job-details', async () => {
+    const filler = 'We are looking for an experienced engineer to join our team. '.repeat(6);
+    const doc = new JSDOM(
+      `<!doctype html><html><head><title>Job</title></head><body><h1 class="top-card-layout__title">Staff Engineer</h1><div id="job-details">${filler}</div></body></html>`
+    ).window.document;
     const result = await extractJd(doc, 'https://www.linkedin.com/jobs/view/123');
     expect(result!.text.length).toBeGreaterThanOrEqual(200);
     expect(result!.title).toBe('Staff Engineer');
-  });
-
-  it('Greenhouse: reads .job__description', async () => {
-    const doc = body(`<h1 class="app-title">Backend Engineer</h1><div class="job__description">${filler}</div>`);
-    const result = await extractJd(doc, 'https://boards.greenhouse.io/acme/jobs/123');
-    expect(result!.text.length).toBeGreaterThanOrEqual(200);
-    expect(result!.title).toBe('Backend Engineer');
-  });
-
-  it('Lever: reads .posting-description', async () => {
-    const doc = body(`<div class="posting-headline"><h2>Product Manager</h2></div><div class="posting-description">${filler}</div>`);
-    const result = await extractJd(doc, 'https://jobs.lever.co/acme/123');
-    expect(result!.text.length).toBeGreaterThanOrEqual(200);
-    expect(result!.title).toBe('Product Manager');
   });
 });
 

@@ -123,6 +123,20 @@ export async function extractJd(
     if (text) break;
   }
 
+  // Lever (current template): no single .posting-description — the JD is split
+  // across stable data-qa blocks. Concatenate them so the whole JD is captured,
+  // not just the densest section (the readability pass would pick a fragment).
+  if (!text) {
+    const leverBlocks = [
+      ...doc.querySelectorAll(
+        '[data-qa="job-description"], [data-qa="posting-requirements"], [data-qa="closing-description"]'
+      ),
+    ];
+    if (leverBlocks.length) {
+      text = norm(leverBlocks.map((b) => b.textContent ?? '').join('\n'));
+    }
+  }
+
   if (!text) {
     // Readability fallback. The original only considered <article>/<main>/
     // <section>; sites like YC render the JD in bare <div>s with no semantic
