@@ -39,7 +39,8 @@ export function validateFitResult(raw: unknown): FitResult {
     throw new Error('strengths must have 3 items');
   if (!Array.isArray(r.gaps) || r.gaps.length < 3)
     throw new Error('gaps must have 3 items');
-  if (typeof r.suggestion !== 'string') throw new Error('Missing field: suggestion');
+  if (typeof r.suggestion !== 'string' || r.suggestion.trim().length === 0)
+    throw new Error('Missing field: suggestion');
   if (!Array.isArray(r.actionPlan) || r.actionPlan.length < 2 || r.actionPlan.length > 3)
     throw new Error('actionPlan must have 2–3 items');
 
@@ -71,7 +72,7 @@ export function validateFitResult(raw: unknown): FitResult {
       (r.gaps as string[])[1],
       (r.gaps as string[])[2],
     ],
-    suggestion: r.suggestion as string,
+    suggestion: (r.suggestion as string).trim(),
     actionPlan: (r.actionPlan as string[]).slice(0, 3) as [string, string] | [string, string, string],
   };
 }

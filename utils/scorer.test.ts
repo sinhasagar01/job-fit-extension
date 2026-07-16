@@ -156,6 +156,30 @@ describe('validateFitResult — required fields', () => {
   });
 });
 
+describe('validateFitResult — suggestion must be present and non-empty', () => {
+  // Reproduction for Task 2.1: Commenda produced a result with a blank
+  // suggestion. A missing suggestion already throws; the gap is that an empty
+  // or whitespace-only string is a required-field violation too — it renders
+  // as an empty "Suggestion" section rather than a real recommendation.
+  it('throws when suggestion is an empty string', () => {
+    const payload = validPayload();
+    payload.suggestion = '';
+    expect(() => validateFitResult(payload)).toThrow();
+  });
+
+  it('throws when suggestion is whitespace only', () => {
+    const payload = validPayload();
+    payload.suggestion = '   \n\t ';
+    expect(() => validateFitResult(payload)).toThrow();
+  });
+
+  it('trims surrounding whitespace from a valid suggestion', () => {
+    const payload = validPayload();
+    payload.suggestion = '  Highlight your Kubernetes experience.  ';
+    expect(validateFitResult(payload).suggestion).toBe('Highlight your Kubernetes experience.');
+  });
+});
+
 describe('validateFitResult — invalid dimension values', () => {
   it('throws on a non-numeric (string) dimension rather than returning NaN', () => {
     const payload = validPayload();
