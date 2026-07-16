@@ -17,7 +17,10 @@ web-ext.config.ts
 # Build artifacts (e.g. `npm run zip` output)
 *.zip
 
+# Local-only docs (not part of the tracked project)
 ARCHITECTURE.md
+AGENTS.md
+JobFit-KEY-FACTS.md
 
 # Editor directories and files
 .vscode/*
