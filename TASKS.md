@@ -76,7 +76,7 @@ Currently the counter decrements before `scoreFit` resolves, so a failed API cal
 
 ---
 
-## Task 1.2 — Result caching (no duplicate calls, no double-charging)
+## Task 1.2 — Result caching (no duplicate calls, no double-charging) ✅
 
 The same resume + same JD must return the identical result, make no second network call, and not decrement the counter.
 
