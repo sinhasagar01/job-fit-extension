@@ -7,7 +7,7 @@ import { mockScoringClient } from '../../utils/mockScoringClient';
 import { createRealScoringClient } from '../../utils/realScoringClient';
 import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
-import { runScoredFit } from '../../utils/runScoredFit';
+import { runCachedFit } from '../../utils/runScoredFit';
 import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
@@ -108,7 +108,8 @@ export default function App() {
     const apiKey = fitProviderApiKey as string | undefined;
     const provider = fitProvider as string | undefined;
     const model = (fitProviderModel as string | undefined) || 'llama-3.3-70b-versatile';
-    const client =
+    // Lazy: only constructed on a cache miss (runCachedFit skips it on a hit).
+    const getClient = () =>
       apiKey && provider === 'groq'
         ? createOpenAICompatClient({ baseUrl: 'https://api.groq.com/openai/v1', model, apiKey })
         : apiKey && provider === 'gemini'
@@ -117,8 +118,8 @@ export default function App() {
             ? createRealScoringClient(geminiApiKey as string)
             : mockScoringClient;
     try {
-      const { result, remaining } = await runScoredFit(
-        client,
+      const { result, remaining } = await runCachedFit(
+        getClient,
         profileText as string,
         jdText,
         { title, company },

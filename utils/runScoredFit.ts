@@ -1,4 +1,6 @@
 import type { FitResult, ScoringClient } from './scorer';
+import { getCachedResult, setCachedResult } from './resultCache';
+import { getRemainingChecks } from './usageCounter';
 
 /**
  * Run a fit score, then consume one usage check — but only when scoring
@@ -21,4 +23,43 @@ export async function runScoredFit(
   const result = await client.scoreFit(profileText, jdText, meta);
   const remaining = await decrement();
   return { result, remaining };
+}
+
+export interface CachedFitOutcome {
+  result: FitResult;
+  remaining: number;
+  fromCache: boolean;
+}
+
+/**
+ * Cache-aware fit run. On a cache hit (same profile + JD as a previous score),
+ * the stored result is returned immediately WITHOUT selecting/constructing a
+ * client, making a network call, or consuming a usage check — so re-scoring the
+ * same page is instant and free. `getClient` is a factory, called only on a
+ * miss, so client selection is skipped entirely on a hit.
+ *
+ * On a miss, scores via runScoredFit (which decrements only on success), then
+ * caches the result. A failed score is not cached and does not decrement.
+ */
+export async function runCachedFit(
+  getClient: () => ScoringClient,
+  profileText: string,
+  jdText: string,
+  meta: { title: string | null; company: string | null },
+  decrement: () => Promise<number>
+): Promise<CachedFitOutcome> {
+  const cached = await getCachedResult(profileText, jdText);
+  if (cached) {
+    return { result: cached, remaining: await getRemainingChecks(), fromCache: true };
+  }
+
+  const { result, remaining } = await runScoredFit(
+    getClient(),
+    profileText,
+    jdText,
+    meta,
+    decrement
+  );
+  await setCachedResult(profileText, jdText, result);
+  return { result, remaining, fromCache: false };
 }

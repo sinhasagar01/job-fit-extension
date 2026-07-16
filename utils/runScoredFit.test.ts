@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runScoredFit } from './runScoredFit';
+import { runCachedFit, runScoredFit } from './runScoredFit';
 import type { FitResult, ScoringClient } from './scorer';
 
 // Task 1.1: a usage check must be consumed only when scoring succeeds. A
@@ -74,4 +74,64 @@ describe('runScoredFit — decrement only after scoreFit succeeds', () => {
       expect(decrement).not.toHaveBeenCalled();
     });
   }
+});
+
+// Task 1.2: the same resume + JD returns the identical result, makes no second
+// network call, selects no client, and does not decrement. Cache is backed by
+// the mocked browser.storage.local (reset between tests in test/setup.ts).
+describe('runCachedFit — result caching', () => {
+  /** A client whose scoreFit calls `fetchSpy` — a stand-in for the network. */
+  const spyingClient = (fetchSpy: () => void, result: FitResult): ScoringClient => ({
+    scoreFit: vi.fn(async () => {
+      fetchSpy();
+      return result;
+    }),
+  });
+
+  it('(a,b,d) re-scoring the same profile+JD: one fetch, no decrement, identical result', async () => {
+    const fetchSpy = vi.fn();
+    const client = spyingClient(fetchSpy, aResult);
+    const getClient = vi.fn(() => client);
+    const decrement = vi.fn(async () => 4);
+
+    const first = await runCachedFit(getClient, 'profile', 'jd', meta, decrement);
+    const second = await runCachedFit(getClient, 'profile', 'jd', meta, decrement);
+
+    expect(fetchSpy).toHaveBeenCalledOnce(); // (a) exactly one network call
+    expect(decrement).toHaveBeenCalledOnce(); // (b) second (cache) hit doesn't decrement
+    expect(getClient).toHaveBeenCalledOnce(); // client not even selected on a hit
+    expect(second.fromCache).toBe(true);
+    expect(second.result).toEqual(first.result); // (d) deep-equals the original
+    expect(second.result).toEqual(aResult);
+  });
+
+  it('(c) a different JD is a cache miss and triggers a second call', async () => {
+    const fetchSpy = vi.fn();
+    const client = spyingClient(fetchSpy, aResult);
+    const decrement = vi.fn(async () => 4);
+
+    await runCachedFit(() => client, 'profile', 'jd-A', meta, decrement);
+    await runCachedFit(() => client, 'profile', 'jd-B', meta, decrement);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(decrement).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache a failed score (a retry still calls the client)', async () => {
+    const decrement = vi.fn(async () => 4);
+    const failing: ScoringClient = {
+      scoreFit: vi.fn(async () => {
+        throw new Error('rate limit');
+      }),
+    };
+    await expect(runCachedFit(() => failing, 'p', 'j', meta, decrement)).rejects.toThrow('rate limit');
+    expect(decrement).not.toHaveBeenCalled();
+
+    // Nothing was cached, so a second attempt re-scores.
+    const ok = spyingClient(vi.fn(), aResult);
+    const out = await runCachedFit(() => ok, 'p', 'j', meta, decrement);
+    expect(ok.scoreFit).toHaveBeenCalledOnce();
+    expect(decrement).toHaveBeenCalledOnce();
+    expect(out.fromCache).toBe(false);
+  });
 });
