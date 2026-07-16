@@ -7,6 +7,7 @@ import { mockScoringClient } from '../../utils/mockScoringClient';
 import { createRealScoringClient } from '../../utils/realScoringClient';
 import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
+import { runScoredFit } from '../../utils/runScoredFit';
 import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 
 type PopupState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
@@ -116,8 +117,13 @@ export default function App() {
             ? createRealScoringClient(geminiApiKey as string)
             : mockScoringClient;
     try {
-      const result = await client.scoreFit(profileText as string, jdText, { title, company });
-      const remaining = await decrementCheck();
+      const { result, remaining } = await runScoredFit(
+        client,
+        profileText as string,
+        jdText,
+        { title, company },
+        decrementCheck
+      );
       setChecksRemaining(remaining);
       setFitResult(result);
       setState('showing-results');
