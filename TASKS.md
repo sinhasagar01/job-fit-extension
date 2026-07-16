@@ -62,7 +62,7 @@ Push to main; the Actions tab shows the test step running and passing. Push a de
 
 Each has a real test as its verifier. This is where `/goal` first earns its place.
 
-## Task 1.1 — Fix `decrementCheck` ordering
+## Task 1.1 — Fix `decrementCheck` ordering ✅
 
 Currently the counter decrements before `scoreFit` resolves, so a failed API call still costs the user a check (specced as an MVP shortcut in `TASKS-mvp.md` Task 7).
 
