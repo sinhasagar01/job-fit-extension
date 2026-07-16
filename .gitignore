@@ -14,6 +14,9 @@ stats-*.json
 .wxt
 web-ext.config.ts
 
+# Build artifacts (e.g. `npm run zip` output)
+*.zip
+
 ARCHITECTURE.md
 
 # Editor directories and files
