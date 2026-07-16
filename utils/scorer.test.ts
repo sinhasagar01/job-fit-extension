@@ -180,6 +180,37 @@ describe('validateFitResult — suggestion must be present and non-empty', () =>
   });
 });
 
+describe('validateFitResult — strengths/gaps must be non-empty strings', () => {
+  // Same failure class as the empty-suggestion gap: a blank or non-string
+  // entry would render as an empty/garbage bullet. The first 3 entries of each
+  // must be non-empty strings, and are trimmed.
+  for (const field of ['strengths', 'gaps'] as const) {
+    it(`throws when a ${field} entry is an empty string`, () => {
+      const payload = validPayload();
+      (payload[field] as string[])[1] = '';
+      expect(() => validateFitResult(payload)).toThrow();
+    });
+
+    it(`throws when a ${field} entry is whitespace only`, () => {
+      const payload = validPayload();
+      (payload[field] as string[])[0] = '   ';
+      expect(() => validateFitResult(payload)).toThrow();
+    });
+
+    it(`throws when a ${field} entry is a non-string`, () => {
+      const payload = validPayload();
+      (payload[field] as unknown[])[2] = null;
+      expect(() => validateFitResult(payload)).toThrow();
+    });
+
+    it(`trims surrounding whitespace from ${field} entries`, () => {
+      const payload = validPayload();
+      (payload[field] as string[])[0] = '  padded entry  ';
+      expect(validateFitResult(payload)[field][0]).toBe('padded entry');
+    });
+  }
+});
+
 describe('validateFitResult — invalid dimension values', () => {
   it('throws on a non-numeric (string) dimension rather than returning NaN', () => {
     const payload = validPayload();

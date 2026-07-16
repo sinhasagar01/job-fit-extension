@@ -39,6 +39,16 @@ export function validateFitResult(raw: unknown): FitResult {
     throw new Error('strengths must have 3 items');
   if (!Array.isArray(r.gaps) || r.gaps.length < 3)
     throw new Error('gaps must have 3 items');
+  // The first 3 entries of strengths/gaps must be non-empty strings — an empty
+  // or non-string entry renders as a blank/garbage bullet (same failure class
+  // as the empty-suggestion bug).
+  for (const [field, arr] of [['strengths', r.strengths], ['gaps', r.gaps]] as const) {
+    for (let i = 0; i < 3; i++) {
+      const v = (arr as unknown[])[i];
+      if (typeof v !== 'string' || v.trim().length === 0)
+        throw new Error(`${field} must be 3 non-empty strings`);
+    }
+  }
   if (typeof r.suggestion !== 'string' || r.suggestion.trim().length === 0)
     throw new Error('Missing field: suggestion');
   if (!Array.isArray(r.actionPlan) || r.actionPlan.length < 2 || r.actionPlan.length > 3)
@@ -63,14 +73,14 @@ export function validateFitResult(raw: unknown): FitResult {
     overall,
     dimensions: { skillsMatch, experienceLevel, domainIndustry, keywordCoverage, educationCerts },
     strengths: [
-      (r.strengths as string[])[0],
-      (r.strengths as string[])[1],
-      (r.strengths as string[])[2],
+      (r.strengths as string[])[0].trim(),
+      (r.strengths as string[])[1].trim(),
+      (r.strengths as string[])[2].trim(),
     ],
     gaps: [
-      (r.gaps as string[])[0],
-      (r.gaps as string[])[1],
-      (r.gaps as string[])[2],
+      (r.gaps as string[])[0].trim(),
+      (r.gaps as string[])[1].trim(),
+      (r.gaps as string[])[2].trim(),
     ],
     suggestion: (r.suggestion as string).trim(),
     actionPlan: (r.actionPlan as string[]).slice(0, 3) as [string, string] | [string, string, string],
