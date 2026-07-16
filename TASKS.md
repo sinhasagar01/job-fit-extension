@@ -94,7 +94,7 @@ The same resume + same JD must return the identical result, make no second netwo
 
 ---
 
-## Task 1.3 — JD extraction fixtures + failing-site fixes
+## Task 1.3 — JD extraction fixtures + failing-site fixes ✅
 
 Three known sites fail detection. Fix them without regressing the working ones.
 
