@@ -11,9 +11,9 @@ npm run build        # Production build for Chrome
 npm run build:firefox
 npm run zip          # Package for Chrome Web Store submission
 npm run compile      # Type-check without emitting (tsc --noEmit)
+npm run test         # Run tests in watch mode (Vitest)
+npm run test:run     # Run tests once (CI-safe single pass)
 ```
-
-No test runner is configured yet.
 
 To load the extension locally: run `npm run dev`, then open `chrome://extensions`, enable Developer Mode, and load the `.output/chrome-mv3-dev/` directory.
 
@@ -23,6 +23,14 @@ To load the extension locally: run `npm run dev`, then open `chrome://extensions
 - Commit with a descriptive message after every completed task.
 - Never put API keys or secrets in extension code or commit them.
 - Never hand-edit `manifest.json` or anything under `.output/` — configure manifest settings in `wxt.config.ts`.
+
+## Testing
+
+Test runner is **Vitest** (jsdom environment, globals enabled). Run `npm run test` (watch) during development and `npm run test:run` (single pass) for CI.
+
+- **Location:** test files are `*.test.ts` / `*.test.tsx` **colocated with the source they cover** (e.g. `utils/scorer.test.ts` next to `utils/scorer.ts`). The only exception is harness plumbing under `test/`.
+- **Storage mock:** the WXT-injected `browser.storage.local` global is mocked with an in-memory store in [`test/setup.ts`](test/setup.ts), so any module that touches storage is testable without extra stubbing. The store resets before every test; call `__seedStorage({...})` from `test/setup.ts` to preload state.
+- **Assertions describe intended behaviour, not current behaviour.** Write the assertion for what the code *should* do, then make it pass — never snapshot a bug and call it green. A test suite that can only pass isn't a verifier: it must be able to fail when the behaviour it guards is broken.
 
 ## Stack
 
