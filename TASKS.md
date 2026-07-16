@@ -117,7 +117,7 @@ Three known sites fail detection. Fix them without regressing the working ones.
 
 Touches core scoring. Human-reviewed; no autonomous loops.
 
-## Task 2.1 — Missing `suggestion` field
+## Task 2.1 — Missing `suggestion` field ✅
 
 `commenda.io/careers/product-builder` produced a result with no suggestion — either the model omitted it and validation let it through, or the UI dropped it.
 
