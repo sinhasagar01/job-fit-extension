@@ -1,48 +1,5 @@
 @import "tailwindcss";
-
-/* Self-hosted fonts, latin subset only — no remote requests (keeps the
-   "nothing leaves your device" claim). Variable fonts, font-display: swap. */
-@font-face {
-  font-family: 'Inter Variable';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url('@fontsource-variable/inter/files/inter-latin-standard-normal.woff2') format('woff2-variations');
-}
-@font-face {
-  font-family: 'Fraunces Variable';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url('@fontsource-variable/fraunces/files/fraunces-latin-standard-normal.woff2') format('woff2-variations');
-}
-
-/* Design tokens from the spec, as Tailwind theme colors (single source). */
-@theme {
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
-  --font-display: 'Fraunces Variable', Georgia, serif;
-
-  --color-ink: #1E1B4B;
-  --color-ink-soft: #4B4778;
-  --color-ink-faint: #8886AD;
-
-  --color-brand: #4F46E5;
-  --color-brand-bright: #6366F1;
-  --color-brand-deep: #4338CA;
-
-  --color-lavender: #EEF0FF;
-  --color-lavender-deep: #E0E2FB;
-
-  --color-paper: #FBFBFE;
-  --color-line: #E7E7F3;
-
-  --color-good: #10B981;
-  --color-good-bg: #ECFDF5;
-  --color-warn: #F59E0B;
-  --color-warn-bg: #FFFBEB;
-  --color-bad: #EF4444;
-  --color-bad-bg: #FEF2F2;
-}
+@import "../../assets/theme.css";
 
 html, body, #root {
   margin: 0;
@@ -58,7 +15,3 @@ body {
 /* Slim scrollbar for the panel body. */
 .panel-scroll::-webkit-scrollbar { width: 8px; }
 .panel-scroll::-webkit-scrollbar-thumb { background: #DCDBEC; border-radius: 4px; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-}

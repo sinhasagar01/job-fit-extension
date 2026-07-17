@@ -41,7 +41,7 @@ WXT + React 19 + TypeScript + Tailwind CSS (v4, CSS-based `@theme` tokens). Self
 | Path | Purpose |
 |------|---------|
 | `entrypoints/` | WXT entrypoints: side panel, options, content script, background |
-| `components/` | Shared React components (`components/panel/` holds side-panel UI) |
+| `components/` | Shared React components (`components/panel/` side panel, `components/tracker/` full-page tracker) |
 | `utils/` | Parsing and scoring logic (PDF extraction, JD extraction, fit scorer) |
 
 ## Architecture
@@ -53,6 +53,7 @@ This is a **Chrome MV3 extension** built with [WXT](https://wxt.dev). WXT uses f
 | `entrypoints/background.ts` | Service worker (MV3 background) |
 | `entrypoints/content.ts` | Content script injected into pages |
 | `entrypoints/sidepanel/` | Chrome Side Panel (React SPA); toolbar icon opens it via `openPanelOnActionClick` |
+| `entrypoints/fullpage/` | Full-page history tracker (`fullpage.html`), opened in a tab from the panel |
 | `entrypoints/options/` | Options/settings page (API provider + key) |
 
 WXT auto-injects globals like `browser`, `defineBackground`, `defineContentScript` — no explicit imports needed for these.

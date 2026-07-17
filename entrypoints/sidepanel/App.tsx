@@ -10,8 +10,15 @@ import { createRealScoringClient } from '../../utils/realScoringClient';
 import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
 import { attemptScoredFit } from '../../utils/runScoredFit';
+import { cacheKey } from '../../utils/resultCache';
 import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 import type { Jd } from './types';
+
+/** Open the full-page tracker in a new tab, optionally expanded to one check. */
+function openTracker(key?: string) {
+  const base = browser.runtime.getURL('/fullpage.html');
+  browser.tabs.create({ url: key ? `${base}?key=${encodeURIComponent(key)}` : base });
+}
 
 type PanelState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
 
@@ -32,6 +39,9 @@ export default function App() {
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [fitContext, setFitContext] = useState<{ title: string | null; company: string | null } | null>(null);
   const [checksRemaining, setChecksRemaining] = useState(5);
+  const [detailKey, setDetailKey] = useState<string | null>(null); // cache key of the shown result
+
+
 
   // Stale-panel tracking: the panel persists across navigation, so a shown
   // result/JD can belong to a page the user has left. `stale` drives a warning
@@ -196,6 +206,7 @@ export default function App() {
       if (!outcome) return;
       setChecksRemaining(outcome.remaining);
       setFitResult(outcome.result);
+      setDetailKey(cacheKey(profileText as string, jdText));
       setState('showing-results');
     } catch (err) {
       setScoreError(err instanceof Error ? err.message : 'Scoring failed. Please try again.');
@@ -239,6 +250,7 @@ export default function App() {
             jdError={jdError}
             stale={stale}
             onRetryJd={runJdExtraction}
+            onPastChecks={() => openTracker()}
             pastedJd={pastedJd}
             onJdPaste={setPastedJd}
             scoring={scoring}
@@ -252,6 +264,7 @@ export default function App() {
             company={fitContext?.company ?? null}
             stale={stale}
             onBack={() => setState('ready')}
+            onOpenDetail={() => openTracker(detailKey ?? undefined)}
           />
         ) : null}
       </div>

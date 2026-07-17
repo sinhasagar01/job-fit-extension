@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "../../assets/theme.css";
+
+html, body { margin: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: #DFDEEC;
+  -webkit-font-smoothing: antialiased;
+}

@@ -16,6 +16,7 @@ interface Props {
   jdError: string | null;
   stale: boolean;
   onRetryJd: () => void;
+  onPastChecks: () => void;
   pastedJd: string;
   onJdPaste: (text: string) => void;
   scoring: boolean;
@@ -41,7 +42,7 @@ function ResumeRow({ fileName, meta, onRemove }: { fileName: string; meta: strin
 }
 
 export default function Ready(props: Props) {
-  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, stale, onRetryJd, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
+  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, stale, onRetryJd, onPastChecks, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
   const exhausted = checksRemaining <= 0;
   const hasJd = jd !== null || pastedJd.trim().length >= 20;
   const canScore = hasJd && !stale;
@@ -130,7 +131,20 @@ export default function Ready(props: Props) {
         </div>
       </div>
 
-      <PanelFooter />
+      <PanelFooter
+        left={
+          <button
+            type="button"
+            onClick={onPastChecks}
+            className="inline-flex items-center gap-[5px] rounded text-[12.5px] font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3 3v5h5" /><path d="M3.05 13A9 9 0 106 5.3L3 8" /><path d="M12 7v5l3 2" />
+            </svg>
+            Past checks
+          </button>
+        }
+      />
     </>
   );
 }

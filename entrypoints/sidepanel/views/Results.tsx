@@ -20,6 +20,7 @@ interface Props {
   company: string | null;
   stale: boolean;
   onBack: () => void;
+  onOpenDetail: () => void;
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -28,7 +29,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Plan' },
 ];
 
-export default function Results({ result, title, company, stale, onBack }: Props) {
+export default function Results({ result, title, company, stale, onBack, onOpenDetail }: Props) {
   const [tab, setTab] = useState<Tab>('verdict');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -41,9 +42,22 @@ export default function Results({ result, title, company, stale, onBack }: Props
     <>
       {/* pinned role + tabs */}
       <div className="border-b border-line bg-white px-4 pt-[13px] shrink-0">
-        <div className="mb-[11px]">
-          <div className="text-[13px] font-semibold leading-[1.3]">{title ?? 'This role'}</div>
-          {company && <div className="text-[11.5px] text-ink-faint">{company}</div>}
+        <div className="mb-[11px] flex items-start justify-between gap-2">
+          <div>
+            <div className="text-[13px] font-semibold leading-[1.3]">{title ?? 'This role'}</div>
+            {company && <div className="text-[11.5px] text-ink-faint">{company}</div>}
+          </div>
+          <button
+            type="button"
+            onClick={onOpenDetail}
+            title="Open detailed view"
+            aria-label="Open detailed view in a new tab"
+            className="mt-0.5 flex shrink-0 rounded text-ink-faint hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            </svg>
+          </button>
         </div>
         <div className="flex gap-0.5" role="tablist" aria-label="Result sections">
           {TABS.map((t) => (
