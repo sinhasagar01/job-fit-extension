@@ -1,296 +1,279 @@
 # TASKS.md
 
-Post-launch task list in build order. Grouped into waves — each wave depends on the one before it. Each task ends with a verification step (automated where possible, manual where not). Complete tasks are marked ✅.
+Post-launch task list in build order. Each wave depends on the one before it.
+Each task ends with a verification step. Complete tasks are marked ✅.
 
-**Current version:** 1.0.0 (live in Chrome Web Store)
+**Current version:** 1.2.0 (submitted for Chrome Web Store review 2026-07-17)
 
-> The original MVP task list is archived in `TASKS-mvp.md`. Note that it describes the original _plan_, not what shipped (e.g. it specifies the Anthropic SDK and a persistent content script; the build uses Gemini/Groq and on-demand `executeScript` injection).
+> The original MVP task list is archived in `TASKS-mvp.md`. It describes the
+> original *plan*, not what shipped.
 
 ---
 
-# Wave 0 — Test harness ✅
+# Shipped (Waves 0–5) ✅
 
-Blocks every other wave. This is the independent verifier that makes autonomous loops safe and CI meaningful. Write the assertions by hand — do not let the agent both write the test and make it pass.
+- **Wave 0** — Vitest + RTL harness, storage mock, CLAUDE.md test conventions, tests in CI.
+- **Wave 1** — `decrementCheck` ordering fix; result caching (hash of profile+JD, no double-charge); JD extraction fixtures incl. Ashby/YC/Commenda fixes.
+- **Wave 2** — `suggestion` field contract fix (validation + prompt tightening).
+- **Wave 3** — Eval harness with completeness gate, retry/backoff, failure records, `.incomplete/` quarantine. **3.2 resolved:** Groq's issue was JSON-output reliability (strict `json_object` 400-ing ~40% of weak-fit calls), not score variance — dropped it, backstop carries; `groq.json` baseline committed. **3.1 open:** Gemini baseline rerun blocked on free-tier quota reset (`GEMINI_API_KEY=… npm run eval -- --provider gemini --runs 3 --delay 10000`; commit only on ✓ COMPLETE).
+- **Wave 5** — Side-panel migration (popup deleted, workspace tabs, stale-panel guard with no-score/no-decrement test); full-page tracker with history, per-row delete, clear-history, 200-entry eviction cap.
 
-## Task 0.1 — Vitest + RTL setup ✅
+---
 
-Install and configure the test runner with conventions documented so future sessions follow them.
+# Wave 6 — JD detection fires on non-job pages 🔴 LIVE BUG — DO THIS FIRST
+
+YouTube, the Gemini API docs, and most content-rich pages are detected as job
+postings. The extension offers to score them, produces nonsense, and spends a
+free check doing it.
+
+## 6.0 — Why this blocks Wave 4
+
+Today a false positive costs the **user** a check. Once scoring is hosted, it
+costs **you** money — every junk page anyone scores is billed to your OpenAI
+balance. Detection must be trustworthy before an endpoint you pay for sits
+behind it. **Do not start Wave 4 until 6.1 is green.**
+
+## Task 6.1 — Negative fixtures + a real "is this a job posting?" gate
+
+**Root cause (verify before fixing).** `extractJd`'s fallback is "largest
+`<article>`/`<main>`/`<section>` ≥ 200 chars". Nearly every content page on the
+web clears that. Nothing checks the text is *a job posting* — only that it is
+*text*.
+
+**Why the existing test never caught it.** Task 1.3's negative case used a
+saved `example.com`, whose whole body is under the 200-char floor. It passed
+because the page was empty, not because a gate works. A test that can only
+pass isn't a verifier — the same failure class this repo already fixed in the
+eval harness.
 
 **Deliverables**
 
-- Install `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `@vitest/coverage-v8`
-- `vitest.config.ts` with `environment: 'jsdom'`, globals enabled, and a `test/setup.ts` importing jest-dom matchers
-- `npm run test` (watch) and `npm run test:run` (single pass, CI-safe) scripts in `package.json`
-- Mock `browser.storage.local` in `test/setup.ts` so any module touching storage is testable
-- A **Testing** section added to `CLAUDE.md` documenting: test file location (`*.test.ts` colocated with source), the storage mock, and the rule that assertions describe intended behaviour, not current behaviour
+- `test/fixtures/negative/` — content-rich pages that are **not** job postings.
+  Minimum six: a YouTube watch page, an API-docs page (e.g. Gemini docs), a news
+  article, a long blog post, a GitHub repo page, a product marketing page. Each
+  must have well over 200 chars of `<main>`/`<article>` text — that's the point.
+- A `looksLikeJobPosting(doc)` gate, run **before** the fallback extractor,
+  scoring positive signals rather than trusting length:
+  - **Definitive:** schema.org JSON-LD `@type: JobPosting` → yes, short-circuit.
+  - **Strong:** known ATS host (`boards.greenhouse.io`, `jobs.lever.co`,
+    `jobs.ashbyhq.com`, `linkedin.com/jobs/…`) or URL path matching
+    `/jobs?/`, `/careers?/`, `/vacanc`, `/opening`.
+  - **Corroborating:** job-phrase density — "responsibilities",
+    "qualifications", "requirements", "what you'll do", "what we're looking
+    for", "about the role", "years of experience", "apply now", "benefits".
+  - Pass on: definitive, OR strong, OR ≥3 corroborating. **Length alone is
+    never sufficient.**
+  - Keep it inline in `extractJd` — the `executeScript` serialization
+    constraint still applies (ARCHITECTURE.md Decision 4).
+- Gate says no → return the no-JD state with the existing paste fallback.
+  Do **not** guess.
 
 **Verification**
-`npm run test:run` exits 0 with a single trivial passing test. `npm run compile` still passes.
 
----
+- Every fixture in `test/fixtures/negative/` returns no JD — **assert on the
+  content-rich ones specifically**.
+- Every existing positive fixture still extracts (no regression).
+- Mutation check: neuter the gate; the negative tests must fail. If they
+  don't, the fixtures aren't content-rich enough.
+- Manually: YouTube, the Gemini API docs, and a news article show the paste
+  fallback, not a detected job.
 
-## Task 0.2 — `validateFitResult` unit tests ✅
-
-The highest-value pure logic in the codebase and the easiest place to build understanding.
+## Task 6.2 — Never spend a check on a page we're unsure about
 
 **Deliverables**
 
-- `utils/scorer.test.ts` covering:
-  - Valid payload → returns a `FitResult` with all fields intact
-  - Dimension score above 10 / below 1 → clamped into range
-  - Missing required field (each of: `dimensions`, `strengths`, `gaps`, `suggestion`) → throws
-  - `overall` present in model output → ignored, recomputed from the weighted mean
-  - Weighted mean arithmetic → known dimension inputs produce the expected `overall` (skills 30%, experience 25%, keywords 20%, domain 15%, education 10%)
-  - Non-numeric or null dimension value → throws rather than producing `NaN`
+- Uncertain detection (fallback extraction with no definitive/strong signal) is
+  surfaced as such: preview the text with an explicit "This doesn't look like a
+  job posting — score it anyway?" affordance, not a confident detected-job card.
+- Test: an uncertain detection does not auto-enable the primary "Am I Fit?"
+  path.
 
 **Verification**
-`npm run test:run` exits 0. Deliberately break the clamp in `validateFitResult` and confirm a test fails — a test suite that can't fail isn't a verifier.
+`npm run test:run` green. Manually: a borderline page requires explicit
+confirmation before it can be scored.
 
 ---
 
-## Task 0.3 — Test suite in CI ✅
+# Wave 4 — Hosted inference (BYOK demoted to escape hatch)
 
-Make the harness an always-on gate rather than something you remember to run.
+**The goal is activation, not ideology.** Users report the tool is useful but
+unusable, because it demands an API key before demonstrating any value. The fix
+is **no key on first run** — a fresh install scores a job with one click and
+zero setup.
+
+**BYOK is demoted, not deleted** — see 4.0, and 4.5 for when it actually dies.
+
+## 4.0 — The constraint that shapes everything below
+
+One check ≈ 3,000 input + 500 output tokens ≈ **$0.001** at gpt-4o-mini.
+A **$5** balance ≈ ~5,000 checks.
+
+| Scenario | Cost |
+|---|---|
+| 38 users × 5/day × 30 days (worst case) | ~$5.70/month |
+| 1,000 users × 5 free checks | ~$5.00 |
+| One unbounded attacker on an anonymous endpoint | the whole balance, in an afternoon |
+
+Conclusions: hosted free is affordable **now** and stops being affordable with
+growth or abuse — so the free tier needs a hard ceiling that **fails closed**.
+And deleting BYOK with no paid tier means every engaged user (persona: 10–50
+jobs/month) hits a wall you can't afford to raise. BYOK stays until Wave 7
+replaces it.
+
+**Decisions (locked 2026-07-17 — flag before starting 4.1 if you disagree):**
+
+- **Free tier: 5/day per anonymous install token**, protected by the global
+  cap. Not lifetime — lifetime limits require accounts, and a sign-in gate
+  before the first score recreates the exact activation barrier this wave
+  exists to remove. Identity arrives with Wave 7 payments, where it's
+  unavoidable and the user is already convinced.
+- **Provider: OpenAI `gpt-4o-mini`.** DeepSeek v4-flash is ~25% cheaper
+  (~$0.0006 vs ~$0.0008/check — cents at this scale) but is a China-based
+  processor of résumé PII, which is the wrong fit for a privacy-branded
+  product. `ScoringClient` makes switching later a one-file change if cost
+  ever matters.
+- **Provider-enforced JSON mode is optional, never load-bearing.** Try
+  OpenAI's `json_schema` structured outputs, but behind the existing
+  brace-extraction backstop; drop it without ceremony if it errors. Groq's
+  strict mode was a 40%-failure bug — our own `validateFitResult` layer is
+  the reliability mechanism.
+
+## Task 4.1 — The proxy (Cloudflare Worker)
 
 **Deliverables**
 
-- Add `npm run test:run` as a step in `.github/workflows/ci.yml`, between `compile` and `build`
+- Worker exposing `POST /score` → `{ profileText, jdText, meta }` → `FitResult`.
+- **Provider key lives only in the Worker's env.** Never in the extension,
+  never in the repo. Ship `.env.example` / `wrangler.toml` vars with no real
+  values, and a "local Worker setup" section in the README.
+- The Worker **reuses `buildPrompt` and `validateFitResult`** — extract to a
+  shared module if needed; the scoring contract must not fork.
+- **Abuse controls, in order of what actually protects the balance:**
+  1. **Global daily spend ceiling that fails closed.** Cap exceeded →
+     `503 { reason: 'free_tier_exhausted' }`, **no provider call** (assert the
+     provider fetch spy is never invoked). This is the only control bounding
+     worst case — per-token limits die to reinstalls, per-IP to a hotspot.
+  2. Per-install anonymous token (generated client-side on first run, stored
+     in `chrome.storage.local`, sent as a header) → 5/day in KV.
+  3. Per-IP daily ceiling.
+  4. Request size limits mirroring the 8,000/4,000-char truncation — reject
+     oversized bodies before they reach the provider.
+- **Counter consistency:** Cloudflare KV is eventually consistent. Use a
+  Durable Object for the global cap, or accept bounded overshoot and say so in
+  a comment (a race past the cap costs ~$0.005 — it's a circuit breaker, not
+  an invoice).
+- **Typed error vocabulary**, not ad-hoc strings: `invalid_input`,
+  `rate_limited`, `free_tier_exhausted`, `provider_error`. The extension
+  switches UI state on these; tests assert each.
+- **Zero-retention posture, and it must be true:** no logging, storing, or
+  forwarding of `profileText`/`jdText`; no request body ever hits a log line.
+  Counters store only `{ token, date, count }`. **This exact posture is what
+  4.3's privacy policy will claim — decide it here, then don't drift.**
+- No accounts, no sign-in.
 
 **Verification**
-Push to main; the Actions tab shows the test step running and passing. Push a deliberately failing test on a branch and confirm CI goes red.
+Worker unit tests: happy path; oversized body rejected; per-token limit;
+per-IP limit; each typed error; and **global cap exhausted → 503 with zero
+provider calls**. Manually: exhaust the cap in staging, confirm no provider
+call fires.
 
----
-
-# Wave 1 — Deterministic fixes
-
-Each has a real test as its verifier. This is where `/goal` first earns its place.
-
-## Task 1.1 — Fix `decrementCheck` ordering ✅
-
-Currently the counter decrements before `scoreFit` resolves, so a failed API call still costs the user a check (specced as an MVP shortcut in `TASKS-mvp.md` Task 7).
+## Task 4.2 — `createHostedClient()` + no key on first run
 
 **Deliverables**
 
-- Test asserting `decrementCheck` is **not** called when `scoreFit` rejects (API error, malformed JSON, rate limit)
-- Test asserting `decrementCheck` **is** called exactly once on success
-- Reorder in `App.tsx` `handleFit` so the decrement happens only after `scoreFit` resolves successfully
+- `utils/hostedScoringClient.ts` implementing `ScoringClient` — POSTs to the
+  Worker, no key. Fourth client beside mock/Gemini/Groq; the interface doesn't
+  change.
+- `getClient`: **user key set → their provider, direct (never through the
+  proxy); no key → hosted.** A BYOK user's data never touches your server —
+  that distinction is load-bearing for 4.3.
+- **First run never mentions an API key.** Upload resume → open job → score.
+  Options keeps BYOK, reframed: "Use your own key — unlimited checks, and
+  your data goes straight to the provider."
+- `503 free_tier_exhausted` is a specific, calm state — not an error toast:
+  two equal paths (add your own key / Pro "coming soon"), no urgency
+  theatrics, no dark patterns. The user has already seen value by this point;
+  that's the entire design.
+- Worker origin added to `host_permissions`.
 
 **Verification**
-`npm run test:run` exits 0. Manually: set an invalid API key, click "Am I Fit?", confirm the remaining-checks count does not drop.
+- Tests: no key → hosted client; key present → direct client, hosted never
+  called; each typed error renders its state.
+- **Before hosted becomes the default:** add the hosted provider to `eval/`
+  and run the 6-pair baseline — ✓ COMPLETE and within the agreed variance
+  bound (per-dim sd ≤ 1.0, overall ≤ 0.75), same bar as Gemini/Groq. The
+  harness exists; use it on the model we're about to pay for.
+- Manually, in a **fresh Chrome profile with no key**: install → upload →
+  score. Zero setup. If this doesn't work in a clean profile, nothing else in
+  the wave matters.
 
----
+## Task 4.3 — Rewrite every privacy claim 🔴 THE ACTUAL GATE
 
-## Task 1.2 — Result caching (no duplicate calls, no double-charging) ✅
+You **certified** the current claims to the Chrome Web Store. Every one below
+is false the moment a hosted check runs:
 
-The same resume + same JD must return the identical result, make no second network call, and not decrement the counter.
+| Claim | Where |
+|---|---|
+| "There is no intermediary. The extension developer receives nothing." | `STORE_LISTING.md` |
+| "We have no servers. We store nothing." | store description |
+| "Does not operate any developer-side servers" | `PRIVACY.md` + gist |
+| "your resume never leaving your device" | `README.md` |
+| "The extension developer receives no data, no telemetry, and no API traffic" | `README.md` |
+| "This extension does not collect any user data" | `SUBMISSION_CHECKLIST.md` + store form |
+| "Local-first storage, user-owned API keys" | `ARCHITECTURE.md` Decision 6 |
+| "Never bundle an API key… the user enters their own key" | `CLAUDE.md`, `AGENTS.md` |
+| "no server, no accounts" | `PRD.md` |
+| "On your device" badge; "no servers" landing copy | side panel, `docs/index.html` |
+
+**The honest replacement** (still a real differentiator):
+
+> Free checks are scored by our server, which passes your text to the AI
+> provider and returns the result. We don't store it, log it, or keep it —
+> the request is processed and dropped. Prefer it never touches our server at
+> all? Add your own API key and scoring goes straight from your browser to
+> the provider.
 
 **Deliverables**
 
-- Deterministic cache key: hash of `profileText + jdText` (stable across popup sessions)
-- Cache stored in `chrome.storage.local`; entry holds the `FitResult` and a timestamp
-- `handleFit` checks the cache before selecting a scoring client; on hit, returns the stored result immediately
-- Cache hit does **not** call `decrementCheck`
-- Tests: (a) two identical `scoreFit` invocations produce exactly one `fetch` (spy), (b) second invocation does not call `decrementCheck`, (c) different JD text produces a cache miss and a second call, (d) result returned from cache deep-equals the original
+- Rewrite `PRIVACY.md` **and** the gist (verify they match — the repo copy may
+  still be the June 16 version, predating the saved-checks disclosure).
+- Update: store description, `STORE_LISTING.md`, `README.md`,
+  `docs/index.html`, `ARCHITECTURE.md` Decision 6 (+ new decision for the
+  hosted proxy), `PRD.md`, `CLAUDE.md`, `AGENTS.md`, `JobFit-KEY-FACTS.md`,
+  and the in-panel "On your device" badge (conditional: true on BYOK, false
+  on hosted).
+- Store form: data declarations become PII **yes**, Website content **yes**;
+  new host-permission justification for the Worker origin; `storage`
+  justification updated (install token added; key line survives until 4.5).
 
 **Verification**
-`npm run test:run` exits 0. Manually: score a job, note remaining checks, click "Check another job" and re-score the same page — result identical, instantly, counter unchanged.
+`grep -rin "no servers\|never leaves your device\|receives nothing\|no intermediary\|does not collect any user data" . --include="*.md" --include="*.html"`
+returns only lines still true — i.e. explicitly scoped to the BYOK path.
+Every surviving claim must answer: *is this true for a user with no key?*
 
-**`/goal` candidate.** Condition: _"npm run test:run exits 0 with all four caching tests passing; no file outside utils/, entrypoints/popup/App.tsx, and test files is modified; no change to buildPrompt or validateFitResult."_ Cap: 12 turns.
+## Task 4.4 — Resubmit as 1.3.0
 
----
+New screenshots (first-run flow, **no key field** anywhere), new data
+declarations, new host permission. Expect a slower review — new host
+permission plus a data-posture change on an extension handling résumés.
 
-## Task 1.3 — JD extraction fixtures + failing-site fixes ✅
+**Verification:** published, and a fresh profile scores a job with zero setup.
 
-Three known sites fail detection. Fix them without regressing the working ones.
+## Task 4.5 — Delete BYOK — gated on Wave 7
 
-**Deliverables**
-
-- `test/fixtures/` containing saved HTML for at least 9 job pages:
-  - **Known failures:** `jobs.ashbyhq.com/phantom/…`, `ycombinator.com/companies/solve-intelligence/jobs/…`, `commenda.io/careers/product-builder`
-  - **Known working:** LinkedIn, Greenhouse, Lever, a standard Ashby posting, plus two arbitrary career pages
-- `utils/extractJd.test.ts` asserting each fixture returns `text.length >= 200` and a non-null `title`
-- Update `extractJd` selectors/fallback until all fixtures pass
-- A test asserting a genuinely JD-free page (e.g. a saved `example.com`) returns null/empty — the fallback must not hallucinate a match
-
-**Verification**
-`npm run test:run` exits 0 across all fixtures. Manually: open each of the three previously-failing live URLs and confirm the JD preview appears instead of the paste-JD fallback.
-
-**`/goal` candidate.** Condition: _"npm run test:run exits 0 with every fixture in test/fixtures/ passing extractJd's ≥200-char assertion; no file outside utils/extractJd.ts and test/ is modified."_ Cap: 15 turns. Collect the fixtures yourself first — the loop can't browse.
+Until a paid tier serves users who exceed the free tier, BYOK is the only
+unlimited path. Deleting it before that isn't simplification; it's removing
+the product's ceiling. When it goes: remove the two provider host
+permissions, the key storage, the options-page key UI, and re-simplify
+`getClient` — and update every 4.3 document again.
 
 ---
 
-# Wave 2 — Scoring contract
+# Wave 7 — Payments (what lets BYOK die)
 
-Touches core scoring. Human-reviewed; no autonomous loops.
-
-## Task 2.1 — Missing `suggestion` field ✅
-
-`commenda.io/careers/product-builder` produced a result with no suggestion — either the model omitted it and validation let it through, or the UI dropped it.
-
-**Deliverables**
-
-- Reproduce first: a test feeding a payload with `suggestion` missing/empty through `validateFitResult`
-- Determine which layer failed (validation gap vs UI render) before changing anything
-- Fix the actual layer; add a test locking the behaviour
-- If the model is genuinely omitting it, tighten the prompt's required-fields instruction
-
-**Verification**
-`npm run test:run` exits 0. Manually: re-run the commenda URL and confirm the suggestion renders.
-
----
-
-# Wave 3 — Scoring quality
-
-The interview-critical work. Build the eval harness by hand; do not automate the tuning.
-
-## Task 3.1 — Eval harness ⛔ BLOCKED (Gemini quota)
-
-> Harness (+ reliability recording and the `✓ COMPLETE` completeness gate),
-> 6 fit-spanning pairs, deterministic stats (unit-tested), and the `vite-node`
-> runner are built and committed. **Groq baseline recorded** —
-> `eval/baselines/groq.json`, `✓ COMPLETE`. **Gemini baseline BLOCKED on the
-> free-tier quota**: two runs so far exhausted it mid-run (the latest was 16/18
-> runs `429`, `✗ INCOMPLETE`). Blocked until the quota resets over a longer
-> window; then rerun (per `eval/README.md`) and commit
-> `eval/baselines/gemini.json` — but only if it prints `✓ COMPLETE`. Invalid
-> reruns now self-quarantine under the gitignored `eval/baselines/.incomplete/`
-> (3a03e5d), so a failed attempt can't be committed to the real path.
-
-**Deliverables**
-
-- 5–8 fixed (resume, JD) pairs spanning the range: strong fit, mid fit, weak fit
-- A script that runs each pair N times against a provider and reports per-dimension mean and variance
-- Recorded baseline output for both Gemini and Groq
-
-**Verification**
-A baseline is valid only if the harness reports `✓ COMPLETE` — every pair scored `n == runs` with `0` failures (it exits non-zero and refuses otherwise; `eval:compare` refuses any baseline where `complete !== true` and skips pairs where `reliable === false`). Comparable-but-incomplete statistics do **not** pass. Additionally, two `✓ COMPLETE` runs on the same pairs produce comparable statistics — the harness itself must be stable before it can judge the model.
-
----
-
-## Task 3.2 — Groq score consistency ✅
-
-> **Resolved — and the premise was wrong.** The inconsistency wasn't score
-> variance; it was Groq's strict `response_format: json_object` failing to emit
-> valid JSON (~40% `400 "Failed to generate JSON"` on the harder pairs).
-> Dropping it (relying on the brace-extraction backstop) took a run from broken
-> to `✓ COMPLETE`, and the underlying scores were already **within the agreed
-> bound**: the complete Groq baseline (temp 0.1, N=5) has worst per-dimension
-> stddev **0.49** (≤ 1.0) and worst overall **0.49** (≤ 0.75) — most dimensions
-> `sd 0.00`. No temperature/seed tuning was needed. The one change that moved
-> the numbers: `createOpenAICompatClient` no longer sends `json_object`. See
-> `eval/baselines/groq.json`.
-
-**Deliverables**
-
-- Diagnose the variance source (temperature, prompt adherence, model choice) using the harness
-- Apply one change at a time, re-running the harness after each
-- Document what was tried and what moved the numbers
-
-**Verification**
-Harness shows variance within an agreed bound (define it before starting) across N runs for the same input, on both providers.
-
----
-
-# Wave 4 — BYOK → hosted inference
-
-**Not a task — a design decision.** Requires its own conversation before any code. It means a backend proxy, key custody, rate limiting, per-request cost, and rewriting the "your data never leaves your device" positioning that the landing page, store listing, and privacy policy are all built on. Blocked pending that discussion.
-
----
-
-# Wave 5 — Sidebar, full-page view, results persistence
-
-Human-driven design work. UI quality isn't mechanically verifiable, so no loops.
-
-## Task 5.1 — migrate the popup to Chrome's Side Panel API. ✅
-
-Design spec: read design/sidebar-results.html (the results view) and
-design/sidebar-states.html (the three pre-score states: needs-resume,
-ready, no-JD-found). Each file's header comment states its constraints.
-
-These are static mockups — match them visually, but port to our stack
-(React + TypeScript + Tailwind). Do not paste the raw HTML/CSS in. Derive
-Tailwind classes from the mockups' CSS variables; they match our existing
-tokens (indigo #4F46E5, lavender #EEF0FF, ink #1E1B4B, Fraunces display +
-Inter body, green/amber/red score bands).
-
-Requirements:
-
-- Check the WXT docs for the correct side-panel entrypoint convention
-  before writing anything; add the sidePanel permission in wxt.config.ts
-- Panel 400px wide, full height; pinned brand bar and footer, scrollable body
-- Keep the existing state machine and all existing logic — this is a
-  view-layer migration, not a rewrite of scoring, storage, or extractJd
-- The tab bar (Verdict / Evidence / Plan / Chat) renders only in
-  showing-results; Chat is disabled with a SOON badge
-- The "job found" card is constant across all pre-score states
-- Loading state is not in the mockups: reuse the ready-state layout with
-  the job card visible and a skeleton where the verdict card will land —
-  do not blank the panel
-- All copy in the mockups is illustrative; real content comes from
-  FitResult and extractJd
-- Responsive, visible keyboard focus, prefers-reduced-motion respected
-
-Show me the plan first.
-
----
-
-## Task 5.2 — Full-page detailed view + history ✅
-
-**Deliverables**
-
-- A full-page view (extension page) showing the detailed result
-- "Open detailed view" CTA from the popup/panel after a score
-- History of past checks, backed by the Wave 1.2 cache
-
-**Verification**
-Manual: score a job, open the detailed view, close everything, reopen — the past result is still listed and readable.
-
----
-
-## Task 5.3 — Pre-screenshot display fixes ✅
-
-> Three bugs found in the built extension while re-capturing store screenshots,
-> all fixed.
-
-**Fixes**
-
-- **Top-of-range copy called a strong dimension a "gap."** At 10/10 the Verdict
-  summary read "…Skills is the gap at 9/10" and rendered a red "WEAKEST — 9/10"
-  box; the Evidence lead claimed a drag that didn't exist. Added a weak-axis
-  floor (`hasWeakAxis`, weak = band ≤ 6) gating `verdictSummary`, the
-  Strongest/Weakest split in `Results.tsx`, and `evidenceLead`. A 7+ is never a
-  gap. (`60bc22a`)
-- **Company missing everywhere** (no panel company line, blank tracker Company
-  column). `extractJd` returned `null`: the old selectors grabbed a Lever
-  location or the hostname. Rebuilt employer extraction — schema.org JSON-LD
-  `hiringOrganization`, then `og:site_name`, then a "role – company" `<title>`
-  fallback for plain-markup pages (e.g. the `sample-job.html` used in the store
-  screenshots). Added `test/fixtures/sample-job.html`. (`803ae6f`, `7be5f6f`)
-
-**Verification**
-Pure-function boundary tests in `verdictCopy.test.ts` (7+ never a gap; boundary
-at 6/7; no "gap"/no drag at the top). `extractJd` company tests incl. plain
-markup → `Northwind Labs`, Lever → the employer (not its location column),
-no-source → `null`. Cross-checked in real Chromium: `sample-job.html` resolves
-company via title-parse to `Northwind Labs`. All 119 tests pass; `compile` and
-`build` clean. **Store screenshots re-captured against a fresh score
-(2026-07-17)** — pre-screenshot work complete.
-
----
-
-# Not doing
-
-- **Storybook** — four small components don't justify the setup cost. Revisit if the Wave 5 redesign grows the component count.
-
----
-
-# Automation, layered in
-
-Adopt each tool when a task actually calls for it, not preemptively.
-
-| When                  | Tool                                | Why then                                        |
-| --------------------- | ----------------------------------- | ----------------------------------------------- |
-| Now                   | `/code-review` before every commit  | Replaces the Claude-web copy-paste review loop  |
-| Wave 0.3              | CI running `test:run`               | The always-on independent verifier              |
-| Wave 1.2 / 1.3        | `/goal`                             | First tasks with a real, deterministic verifier |
-| If repetition appears | A custom skill in `.claude/skills/` | Only once the same multi-step prompt recurs     |
+Not a task — a business decision, downstream of Wave 4 data. **Mechanical
+trigger:** the global daily cap starts firing regularly — that's the free tier
+outgrowing the balance, arriving as numbers instead of a guess. Needs: Stripe,
+identity (this is where accounts/auth finally enter, attached to checkout —
+not before), honest positioning about what's free. PRD sketches Pro $9/mo.
+Open until the data exists.
