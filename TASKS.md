@@ -143,14 +143,18 @@ Touches core scoring. Human-reviewed; no autonomous loops.
 
 The interview-critical work. Build the eval harness by hand; do not automate the tuning.
 
-## Task 3.1 — Eval harness 🚧 Gemini baseline pending
+## Task 3.1 — Eval harness ⛔ BLOCKED (Gemini quota)
 
 > Harness (+ reliability recording and the `✓ COMPLETE` completeness gate),
 > 6 fit-spanning pairs, deterministic stats (unit-tested), and the `vite-node`
 > runner are built and committed. **Groq baseline recorded** —
-> `eval/baselines/groq.json`, `✓ COMPLETE`. **Gemini baseline still pending**:
-> the free-tier quota exhausted mid-run, so rerun after it resets (per
-> `eval/README.md`) and commit `eval/baselines/gemini.json`.
+> `eval/baselines/groq.json`, `✓ COMPLETE`. **Gemini baseline BLOCKED on the
+> free-tier quota**: two runs so far exhausted it mid-run (the latest was 16/18
+> runs `429`, `✗ INCOMPLETE`). Blocked until the quota resets over a longer
+> window; then rerun (per `eval/README.md`) and commit
+> `eval/baselines/gemini.json` — but only if it prints `✓ COMPLETE`. Invalid
+> reruns now self-quarantine under the gitignored `eval/baselines/.incomplete/`
+> (3a03e5d), so a failed attempt can't be committed to the real path.
 
 **Deliverables**
 
