@@ -1,5 +1,9 @@
 # Chrome Web Store Submission Checklist — JobFit
 
+> **✅ Submitted to the Chrome Web Store — v1.2.0, 2026-07-17** (tagged `v1.2.0`).
+> Extension bundle as of `7be5f6f` (unchanged since; later commits are docs/eval
+> only). Boxes below are retained as the record for this and future submissions.
+
 Work through this top-to-bottom before submitting. The permission justifications are pre-written for the review form.
 
 ---
