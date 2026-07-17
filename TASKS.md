@@ -190,7 +190,7 @@ Harness shows variance within an agreed bound (define it before starting) across
 
 Human-driven design work. UI quality isn't mechanically verifiable, so no loops.
 
-## Task 5.1 — migrate the popup to Chrome's Side Panel API.
+## Task 5.1 — migrate the popup to Chrome's Side Panel API. ✅
 
 Design spec: read design/sidebar-results.html (the results view) and
 design/sidebar-states.html (the three pre-score states: needs-resume,
