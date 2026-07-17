@@ -73,6 +73,40 @@ async function scoreExpectingError(): Promise<ScoringError> {
   return outcome.e as ScoringError;
 }
 
+/** Stub fetch to return a 200 chat completion with the given raw content. */
+function stubFetchContent(content: string): void {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content } }] }) }) as Response)
+  );
+}
+
+// The brace-extraction backstop parses the outermost {…} when the model wraps
+// the JSON in prose/fences. It becomes the PRIMARY path once json_object mode is
+// dropped, so it must be proven on non-JSON-wrapped output.
+describe('createOpenAICompatClient — JSON extraction backstop', () => {
+  // validPayload dims → weighted overall = 8·.30 + 7·.25 + 5·.20 + 6·.15 + 4·.10 = 6.45 → 6
+  it('parses a JSON object wrapped in non-JSON preamble and suffix', async () => {
+    stubFetchContent(`Here is the fit assessment:\n\n${validPayload}\n\nLet me know if you'd like changes.`);
+    const result = await createOpenAICompatClient(base).scoreFit('profile', 'jd');
+    expect(result.dimensions.skillsMatch).toBe(8);
+    expect(result.suggestion).toBe('Tailor your resume.');
+    expect(result.overall).toBe(6);
+  });
+
+  it('parses a fenced ```json block surrounded by prose', async () => {
+    stubFetchContent(`Sure!\n\`\`\`json\n${validPayload}\n\`\`\`\nHope this helps.`);
+    const result = await createOpenAICompatClient(base).scoreFit('profile', 'jd');
+    expect(result.dimensions.experienceLevel).toBe(7);
+    expect(result.strengths).toEqual(['s1', 's2', 's3']);
+  });
+
+  it('throws when there is no JSON object at all', async () => {
+    stubFetchContent('I cannot help with that request.');
+    await expect(createOpenAICompatClient(base).scoreFit('profile', 'jd')).rejects.toThrow(/unexpected response format/);
+  });
+});
+
 describe('createOpenAICompatClient — 429 retriable classification', () => {
   it('marks an exhausted-quota 429 non-retriable (fail fast)', async () => {
     vi.useFakeTimers();
