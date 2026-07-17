@@ -1,6 +1,7 @@
 import LinkedInUploadSection from '../../../components/LinkedInUploadSection';
 import FoundJobCard from '../../../components/panel/FoundJobCard';
 import PanelFooter from '../../../components/panel/PanelFooter';
+import StaleBanner from '../../../components/panel/StaleBanner';
 import type { Jd } from '../types';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   jd: Jd | null;
   jdLoading: boolean;
   jdError: string | null;
+  stale: boolean;
   onRetryJd: () => void;
   pastedJd: string;
   onJdPaste: (text: string) => void;
@@ -39,13 +41,20 @@ function ResumeRow({ fileName, meta, onRemove }: { fileName: string; meta: strin
 }
 
 export default function Ready(props: Props) {
-  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, onRetryJd, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
+  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, stale, onRetryJd, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
   const exhausted = checksRemaining <= 0;
   const hasJd = jd !== null || pastedJd.trim().length >= 20;
+  const canScore = hasJd && !stale;
 
   return (
     <>
       <div className="panel-scroll min-h-0 flex-1 overflow-y-auto">
+        {stale && (
+          <StaleBanner>
+            <b className="font-semibold text-ink">You've switched pages.</b> This is the job from the page you
+            came from — <b className="font-semibold text-ink">click the JobFit icon</b> to read this page instead.
+          </StaleBanner>
+        )}
         {jd ? (
           <FoundJobCard title={jd.title} company={jd.company} snippet={jd.text} hostname={jd.hostname} />
         ) : jdLoading ? (
@@ -93,7 +102,7 @@ export default function Ready(props: Props) {
             <button
               type="button"
               onClick={onDone}
-              disabled={!hasJd || scoring}
+              disabled={!canScore || scoring}
               className="flex w-full items-center justify-center gap-2 rounded-[11px] bg-gradient-to-br from-brand-bright to-brand p-3.5 text-[14.5px] font-semibold text-white shadow-[0_4px_14px_rgba(79,70,229,0.26)] transition-transform hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:translate-y-0 disabled:bg-[#C9C7E8] disabled:shadow-none"
             >
               <svg width="17" height="17" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z" /></svg>
@@ -112,9 +121,11 @@ export default function Ready(props: Props) {
           <div className="mt-2.5 text-center text-[11px] text-ink-faint">
             {exhausted
               ? '0 of 5 free checks left today · resets tomorrow'
-              : hasJd
-                ? `${checksRemaining} of 5 free checks remaining today`
-                : 'Paste at least a paragraph to score'}
+              : stale
+                ? 'Switched pages — click the JobFit icon to score this one'
+                : hasJd
+                  ? `${checksRemaining} of 5 free checks remaining today`
+                  : 'Paste at least a paragraph to score'}
           </div>
         </div>
       </div>

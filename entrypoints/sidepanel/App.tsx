@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import BrandBar from '../../components/panel/BrandBar';
 import NeedsResume from './views/NeedsResume';
 import Ready from './views/Ready';
@@ -9,7 +9,7 @@ import { mockScoringClient } from '../../utils/mockScoringClient';
 import { createRealScoringClient } from '../../utils/realScoringClient';
 import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
-import { runCachedFit } from '../../utils/runScoredFit';
+import { attemptScoredFit } from '../../utils/runScoredFit';
 import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 import type { Jd } from './types';
 
@@ -32,6 +32,17 @@ export default function App() {
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [fitContext, setFitContext] = useState<{ title: string | null; company: string | null } | null>(null);
   const [checksRemaining, setChecksRemaining] = useState(5);
+
+  // Stale-panel tracking: the panel persists across navigation, so a shown
+  // result/JD can belong to a page the user has left. `stale` drives a warning
+  // banner and blocks scoring (so a wrong-page score can't spend a check).
+  const [stale, setStale] = useState(false);
+  const sourceTabIdRef = useRef<number | null>(null); // tab the current jd was read from
+  const sourceNavigatedRef = useRef(false); // did that tab navigate since?
+  const staleRef = useRef(stale);
+  staleRef.current = stale;
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
     Promise.all([
@@ -60,6 +71,10 @@ export default function App() {
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error('No active tab found.');
+      // This read defines the panel's "current page" — clear any staleness.
+      sourceTabIdRef.current = tab.id;
+      sourceNavigatedRef.current = false;
+      setStale(false);
       const results = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: extractJd });
       const r = results[0]?.result ?? null;
       let hostname: string | null = null;
@@ -84,12 +99,43 @@ export default function App() {
     if (state === 'needs-resume' || state === 'ready') runJdExtraction();
   }, [state, runJdExtraction]);
 
+  // Detect when the active page no longer matches the JD/result we're showing.
+  // No new permissions: onActivated needs none, and onUpdated's `status` is
+  // available without the `tabs` permission (only url/title are gated).
+  useEffect(() => {
+    const onActivated = (info: { tabId: number }) => {
+      const src = sourceTabIdRef.current;
+      if (src == null) return;
+      if (info.tabId !== src) setStale(true);
+      else if (!sourceNavigatedRef.current) setStale(false); // returned to source, unchanged
+    };
+    const onUpdated = (tabId: number, changeInfo: { status?: string }) => {
+      if (tabId === sourceTabIdRef.current && changeInfo.status === 'loading') {
+        sourceNavigatedRef.current = true; // sticky: that page has changed
+        setStale(true);
+      }
+    };
+    browser.tabs.onActivated.addListener(onActivated);
+    browser.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      browser.tabs.onActivated.removeListener(onActivated);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+    };
+  }, []);
+
   // The background pings us after each toolbar-icon click (which just re-granted
   // activeTab for the current tab) so we re-read whatever page is now active.
+  // If a stale result is on screen, clicking the icon means "work on this page"
+  // — drop back to the pre-score flow so the user re-scores rather than acting
+  // on the old result.
   useEffect(() => {
     const onMessage = (msg: unknown) => {
       if (typeof msg === 'object' && msg !== null && (msg as { type?: unknown }).type === 'jobfit:reextract') {
-        runJdExtraction();
+        if (stateRef.current === 'showing-results' && staleRef.current) {
+          setState('ready'); // the [state] effect re-extracts
+        } else {
+          runJdExtraction();
+        }
       }
     };
     browser.runtime.onMessage.addListener(onMessage);
@@ -145,9 +191,11 @@ export default function App() {
             ? createRealScoringClient(geminiApiKey as string)
             : mockScoringClient;
     try {
-      const { result, remaining } = await runCachedFit(getClient, profileText as string, jdText, { title, company }, decrementCheck);
-      setChecksRemaining(remaining);
-      setFitResult(result);
+      // Blocked when stale → no scoreFit, no decrement, no wrong-page result.
+      const outcome = await attemptScoredFit(stale, getClient, profileText as string, jdText, { title, company }, decrementCheck);
+      if (!outcome) return;
+      setChecksRemaining(outcome.remaining);
+      setFitResult(outcome.result);
       setState('showing-results');
     } catch (err) {
       setScoreError(err instanceof Error ? err.message : 'Scoring failed. Please try again.');
@@ -189,6 +237,7 @@ export default function App() {
             jd={jd}
             jdLoading={jdLoading}
             jdError={jdError}
+            stale={stale}
             onRetryJd={runJdExtraction}
             pastedJd={pastedJd}
             onJdPaste={setPastedJd}
@@ -201,6 +250,7 @@ export default function App() {
             result={fitResult}
             title={fitContext?.title ?? null}
             company={fitContext?.company ?? null}
+            stale={stale}
             onBack={() => setState('ready')}
           />
         ) : null}

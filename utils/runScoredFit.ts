@@ -63,3 +63,22 @@ export async function runCachedFit(
   await setCachedResult(profileText, jdText, result);
   return { result, remaining, fromCache: false };
 }
+
+/**
+ * Guarded entry to runCachedFit. When `blocked` is true — e.g. the side panel
+ * is stale because the active tab no longer matches the page the JD was read
+ * from — score NOTHING: no client is selected, no scoreFit runs, and no usage
+ * check is consumed. This makes a wrong-page score (and its wasted check)
+ * impossible even if a caller reaches this path. Returns null when blocked.
+ */
+export async function attemptScoredFit(
+  blocked: boolean,
+  getClient: () => ScoringClient,
+  profileText: string,
+  jdText: string,
+  meta: { title: string | null; company: string | null },
+  decrement: () => Promise<number>
+): Promise<CachedFitOutcome | null> {
+  if (blocked) return null;
+  return runCachedFit(getClient, profileText, jdText, meta, decrement);
+}

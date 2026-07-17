@@ -10,6 +10,7 @@ import {
 import ScoreRing from '../../../components/panel/ScoreRing';
 import DimensionBars from '../../../components/panel/DimensionBars';
 import PanelFooter from '../../../components/panel/PanelFooter';
+import StaleBanner from '../../../components/panel/StaleBanner';
 
 type Tab = 'verdict' | 'evidence' | 'plan';
 
@@ -17,6 +18,7 @@ interface Props {
   result: FitResult;
   title: string | null;
   company: string | null;
+  stale: boolean;
   onBack: () => void;
 }
 
@@ -26,7 +28,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Plan' },
 ];
 
-export default function Results({ result, title, company, onBack }: Props) {
+export default function Results({ result, title, company, stale, onBack }: Props) {
   const [tab, setTab] = useState<Tab>('verdict');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +77,14 @@ export default function Results({ result, title, company, onBack }: Props) {
           </button>
         </div>
       </div>
+
+      {stale && (
+        <StaleBanner>
+          This check is for <b className="font-semibold text-ink">{title ?? 'the previous role'}</b>
+          {company ? ` at ${company}` : ''}. You've moved to a different page —{' '}
+          <b className="font-semibold text-ink">click the JobFit icon</b> to score this one.
+        </StaleBanner>
+      )}
 
       {/* scrollable panes */}
       <div ref={scrollRef} className="panel-scroll min-h-0 flex-1 overflow-y-auto">

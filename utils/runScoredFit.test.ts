@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runCachedFit, runScoredFit } from './runScoredFit';
+import { attemptScoredFit, runCachedFit, runScoredFit } from './runScoredFit';
 import type { FitResult, ScoringClient } from './scorer';
 
 // Task 1.1: a usage check must be consumed only when scoring succeeds. A
@@ -115,6 +115,33 @@ describe('runCachedFit — result caching', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(decrement).toHaveBeenCalledTimes(2);
+  });
+
+  it('when blocked (stale panel), never selects a client, scores, or decrements', async () => {
+    const fetchSpy = vi.fn();
+    const client = spyingClient(fetchSpy, aResult);
+    const getClient = vi.fn(() => client);
+    const decrement = vi.fn(async () => 4);
+
+    const out = await attemptScoredFit(true, getClient, 'profile', 'jd', meta, decrement);
+
+    expect(out).toBeNull();
+    expect(getClient).not.toHaveBeenCalled(); // no client selected
+    expect(client.scoreFit).not.toHaveBeenCalled(); // no scoreFit
+    expect(fetchSpy).not.toHaveBeenCalled(); // no network
+    expect(decrement).not.toHaveBeenCalled(); // no check consumed
+  });
+
+  it('when not blocked, delegates to runCachedFit (scores and decrements)', async () => {
+    const fetchSpy = vi.fn();
+    const client = spyingClient(fetchSpy, aResult);
+    const decrement = vi.fn(async () => 4);
+
+    const out = await attemptScoredFit(false, () => client, 'profile', 'jd', meta, decrement);
+
+    expect(out?.result).toEqual(aResult);
+    expect(client.scoreFit).toHaveBeenCalledOnce();
+    expect(decrement).toHaveBeenCalledOnce();
   });
 
   it('does not cache a failed score (a retry still calls the client)', async () => {
