@@ -16,7 +16,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "eval": "vite-node eval/runEval.ts --",
-    "eval:mock": "vite-node eval/runEval.ts -- --provider mock --runs 3",
+    "eval:mock": "vite-node eval/runEval.ts -- --provider mock --runs 3 --delay 0",
     "eval:compare": "vite-node eval/compareBaselines.ts --",
     "postinstall": "wxt prepare"
   },

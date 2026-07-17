@@ -1,5 +1,6 @@
 import type { ScoringClient, FitResult } from './scorer';
 import { validateFitResult } from './scorer';
+import { ScoringError } from './scoringError';
 import { buildPrompt, apiDetail, isApiKeyInvalid } from './scoringUtils';
 
 export function createOpenAICompatClient({
@@ -46,7 +47,7 @@ export function createOpenAICompatClient({
       try {
         response = await fetch(url, requestInit);
       } catch {
-        throw new Error('Network error. Please check your connection.');
+        throw new ScoringError('Network error. Please check your connection.', { retriable: true });
       }
 
       if (response.status === 429 || response.status === 503) {
@@ -54,7 +55,7 @@ export function createOpenAICompatClient({
         try {
           response = await fetch(url, requestInit);
         } catch {
-          throw new Error('Network error. Please check your connection.');
+          throw new ScoringError('Network error. Please check your connection.', { retriable: true });
         }
       }
 
@@ -68,12 +69,21 @@ export function createOpenAICompatClient({
 
         const detail = apiDetail(body);
         if (isApiKeyInvalid(response.status, body)) {
-          throw new Error(`Invalid API key. Check your key in Settings.${detail}`);
+          throw new ScoringError(`Invalid API key. Check your key in Settings.${detail}`, {
+            status: response.status,
+            retriable: false,
+          });
         }
         if (response.status === 429) {
-          throw new Error(`Rate limit reached. Please wait a moment and try again.${detail}`);
+          throw new ScoringError(`Rate limit reached. Please wait a moment and try again.${detail}`, {
+            status: 429,
+            retriable: true,
+          });
         }
-        throw new Error(`Scoring failed (HTTP ${response.status}). Please try again.${detail}`);
+        throw new ScoringError(`Scoring failed (HTTP ${response.status}). Please try again.${detail}`, {
+          status: response.status,
+          retriable: response.status >= 500,
+        });
       }
 
       const data = await response.json() as Record<string, unknown>;
@@ -107,8 +117,9 @@ export function createOpenAICompatClient({
         if (parsed === undefined) {
           const finishDetail = import.meta.env.DEV && finishReason ? ` finish_reason=${finishReason}` : '';
           const rawDetail = import.meta.env.DEV ? ` (raw: ${cleaned.slice(0, 1000)})` : '';
-          throw new Error(
-            `Scoring failed: unexpected response format. Please try again.${finishDetail}${rawDetail}`
+          throw new ScoringError(
+            `Scoring failed: unexpected response format. Please try again.${finishDetail}${rawDetail}`,
+            { status: response.status, retriable: false }
           );
         }
       }

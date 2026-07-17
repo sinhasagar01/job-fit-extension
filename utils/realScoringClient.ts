@@ -1,5 +1,6 @@
 import type { ScoringClient, FitResult } from './scorer';
 import { validateFitResult } from './scorer';
+import { ScoringError } from './scoringError';
 import { buildPrompt, apiDetail, isApiKeyInvalid } from './scoringUtils';
 
 const GEMINI_URL =
@@ -30,7 +31,7 @@ export function createRealScoringClient(apiKey: string, temperature = 0.1): Scor
       try {
         response = await fetch(GEMINI_URL, requestInit);
       } catch {
-        throw new Error('Network error. Please check your connection.');
+        throw new ScoringError('Network error. Please check your connection.', { retriable: true });
       }
 
       if (response.status === 429 || response.status === 503) {
@@ -38,7 +39,7 @@ export function createRealScoringClient(apiKey: string, temperature = 0.1): Scor
         try {
           response = await fetch(GEMINI_URL, requestInit);
         } catch {
-          throw new Error('Network error. Please check your connection.');
+          throw new ScoringError('Network error. Please check your connection.', { retriable: true });
         }
       }
 
@@ -52,12 +53,21 @@ export function createRealScoringClient(apiKey: string, temperature = 0.1): Scor
 
         const detail = apiDetail(body);
         if (isApiKeyInvalid(response.status, body)) {
-          throw new Error(`Invalid API key. Check your key in Settings.${detail}`);
+          throw new ScoringError(`Invalid API key. Check your key in Settings.${detail}`, {
+            status: response.status,
+            retriable: false,
+          });
         }
         if (response.status === 429) {
-          throw new Error(`Rate limit reached. Please wait a moment and try again.${detail}`);
+          throw new ScoringError(`Rate limit reached. Please wait a moment and try again.${detail}`, {
+            status: 429,
+            retriable: true,
+          });
         }
-        throw new Error(`Scoring failed (HTTP ${response.status}). Please try again.${detail}`);
+        throw new ScoringError(`Scoring failed (HTTP ${response.status}). Please try again.${detail}`, {
+          status: response.status,
+          retriable: response.status >= 500,
+        });
       }
 
       const data = await response.json() as Record<string, unknown>;
@@ -80,7 +90,10 @@ export function createRealScoringClient(apiKey: string, temperature = 0.1): Scor
         parsed = JSON.parse(cleaned);
       } catch {
         const rawDetail = import.meta.env.DEV ? ` (raw: ${cleaned.slice(0, 200)})` : '';
-        throw new Error(`Scoring failed: unexpected response format. Please try again.${rawDetail}`);
+        throw new ScoringError(`Scoring failed: unexpected response format. Please try again.${rawDetail}`, {
+          status: response.status,
+          retriable: false,
+        });
       }
 
       return validateFitResult(parsed);

@@ -27,15 +27,36 @@ GEMINI_API_KEY=…  npm run eval -- --provider gemini --runs 5
 GROQ_API_KEY=…    npm run eval -- --provider groq   --runs 5 --model llama-3.3-70b-versatile
 ```
 
-Flags: `--provider gemini|groq|mock`, `--runs N` (default 5), `--model <id>` (groq).
-Env equivalents: `EVAL_PROVIDER`, `EVAL_RUNS`, `EVAL_MODEL`.
+Flags: `--provider gemini|groq|mock`, `--runs N` (default 5), `--model <id>` (groq),
+`--temperature <n>`, `--seed <n>`, `--delay <ms>` (default **4000**; spacing between
+calls to avoid free-tier rate limits), `--retries <n>` (default **3**; retries on
+429/503/network with exponential backoff), `--backoff <ms>` (default **2000**),
+`--allow-incomplete` (exploration only — see below).
+Env equivalents: `EVAL_PROVIDER`, `EVAL_RUNS`, `EVAL_MODEL`, `EVAL_TEMPERATURE`,
+`EVAL_SEED`, `EVAL_DELAY`, `EVAL_RETRIES`, `EVAL_BACKOFF`, `EVAL_ALLOW_INCOMPLETE`.
+
+## Reliability & the completeness gate
+
+The harness records **every** failed run with its HTTP status + message, counts
+**retries separately** from real failures, and refuses to pretend small samples are
+sound:
+
+- A pair with `< 3` successful runs is flagged `⚠ UNRELIABLE` (variance of one
+  sample is a meaningless `0`) and marked `reliable: false` in the JSON.
+- After the run it prints `✓ COMPLETE` (every pair `n == runs`, `0` failures) or
+  `✗ INCOMPLETE` with the offending pairs + status codes, and **exits non-zero**
+  when incomplete. `--allow-incomplete` keeps the run but the JSON stays
+  `complete: false`, so it can never pass the comparison gate below.
+- `eval:compare` **throws/exits non-zero** if either baseline is `complete: false`,
+  and **skips** (refuses) any pair marked `reliable: false`.
 
 ## Recording baselines
 
-Each run writes `baselines/<provider>.json` (provider, model, runs, timestamp,
-and per-pair aggregates). **Commit `baselines/gemini.json` and `baselines/groq.json`**
-as the recorded baselines for Task 3.1 — they contain only scores, no secrets.
-`baselines/mock.json` is throwaway (gitignored).
+Each run writes `baselines/<provider>.json` (config + `complete` + per-pair
+`{ runs, succeeded, retries, failures:[{run,status,message}], reliable, aggregate }`).
+A baseline is only valid for Task 3.1 / comparison when it printed `✓ COMPLETE`.
+**Commit `baselines/gemini.json` and `baselines/groq.json`** once complete — they
+contain only scores, no secrets. `baselines/mock.json` is throwaway (gitignored).
 
 ## Task 3.2 — Groq variance experiments
 

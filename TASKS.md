@@ -157,7 +157,7 @@ The interview-critical work. Build the eval harness by hand; do not automate the
 - Recorded baseline output for both Gemini and Groq
 
 **Verification**
-Running the harness twice on the same pairs produces comparable statistics — the harness itself must be stable before it can judge the model.
+A baseline is valid only if the harness reports `✓ COMPLETE` — every pair scored `n == runs` with `0` failures (it exits non-zero and refuses otherwise; `eval:compare` refuses any baseline where `complete !== true` and skips pairs where `reliable === false`). Comparable-but-incomplete statistics do **not** pass. Additionally, two `✓ COMPLETE` runs on the same pairs produce comparable statistics — the harness itself must be stable before it can judge the model.
 
 ---
 

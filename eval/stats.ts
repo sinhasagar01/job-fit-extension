@@ -3,6 +3,10 @@ import { DIMENSION_KEYS, type DimensionKey } from '../utils/dimensions';
 
 export { DIMENSION_KEYS, type DimensionKey };
 
+/** Below this many successful runs, per-pair variance is not trustworthy
+ *  (variance of a single sample is 0 — a false "perfectly stable"). */
+export const MIN_RELIABLE_SAMPLES = 3;
+
 export function mean(xs: number[]): number {
   if (xs.length === 0) return NaN;
   return xs.reduce((a, b) => a + b, 0) / xs.length;
