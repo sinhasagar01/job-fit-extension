@@ -60,7 +60,7 @@ export async function runCachedFit(
     meta,
     decrement
   );
-  await setCachedResult(profileText, jdText, result);
+  await setCachedResult(profileText, jdText, result, meta);
   return { result, remaining, fromCache: false };
 }
 
