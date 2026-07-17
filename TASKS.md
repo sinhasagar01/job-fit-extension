@@ -273,7 +273,8 @@ at 6/7; no "gap"/no drag at the top). `extractJd` company tests incl. plain
 markup → `Northwind Labs`, Lever → the employer (not its location column),
 no-source → `null`. Cross-checked in real Chromium: `sample-job.html` resolves
 company via title-parse to `Northwind Labs`. All 119 tests pass; `compile` and
-`build` clean.
+`build` clean. **Store screenshots re-captured against a fresh score
+(2026-07-17)** — pre-screenshot work complete.
 
 ---
 

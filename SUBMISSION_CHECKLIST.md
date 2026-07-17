@@ -20,7 +20,7 @@ Work through this top-to-bottom before submitting. The permission justifications
 
 ## Store assets
 
-- [ ] At least 1 screenshot captured at 1280×800 px (see `STORE_LISTING.md` for what to show)
+- [x] At least 1 screenshot captured at 1280×800 px (see `STORE_LISTING.md` for what to show) — re-captured 2026-07-17 after the Task 5.3 display fixes
 - [ ] Small promo tile created at 440×280 px (PNG)
 - [ ] Icons confirmed present: 16×16, 48×48, 128×128 (already in `icon/`)
 
