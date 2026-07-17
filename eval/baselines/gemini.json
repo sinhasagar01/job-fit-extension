@@ -1,0 +1,472 @@
+{
+  "provider": "gemini",
+  "model": null,
+  "temperature": 0.1,
+  "seed": null,
+  "runs": 5,
+  "delay": 4000,
+  "retries": 3,
+  "complete": false,
+  "timestamp": "2026-07-17T08:12:46.797Z",
+  "pairs": [
+    {
+      "id": "strong-frontend",
+      "expectedBand": "strong",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 8,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "experienceLevel": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "domainIndustry": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "educationCerts": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "strong-data-scientist",
+      "expectedBand": "strong",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 2,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 9,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "experienceLevel": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "domainIndustry": {
+            "mean": 7.2,
+            "variance": 0.15999999999999998,
+            "stddev": 0.39999999999999997,
+            "values": [
+              7,
+              7,
+              8,
+              7,
+              7
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "educationCerts": {
+            "mean": 10,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              10,
+              10,
+              10,
+              10,
+              10
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "mid-backend",
+      "expectedBand": "mid",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 2,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 5,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 4,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "experienceLevel": {
+            "mean": 5,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "domainIndustry": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 4,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "educationCerts": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "mid-product-manager",
+      "expectedBand": "mid",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 6,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "experienceLevel": {
+            "mean": 5,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "domainIndustry": {
+            "mean": 4,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "educationCerts": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "weak-ml-research",
+      "expectedBand": "weak",
+      "runs": 5,
+      "succeeded": 2,
+      "retries": 12,
+      "failures": [
+        {
+          "run": 2,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 2.929582605s.)"
+        },
+        {
+          "run": 4,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 6.695863174s.)"
+        },
+        {
+          "run": 5,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 39.016018459s.)"
+        }
+      ],
+      "reliable": false,
+      "aggregate": {
+        "overall": {
+          "mean": 1,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            1,
+            1
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1
+            ]
+          },
+          "experienceLevel": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1
+            ]
+          },
+          "domainIndustry": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1
+            ]
+          },
+          "educationCerts": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "weak-enterprise-sales",
+      "expectedBand": "weak",
+      "runs": 5,
+      "succeeded": 0,
+      "retries": 15,
+      "failures": [
+        {
+          "run": 1,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 11.158355039s.)"
+        },
+        {
+          "run": 2,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 43.265332073s.)"
+        },
+        {
+          "run": 3,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 15.634673344s.)"
+        },
+        {
+          "run": 4,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 47.839246702s.)"
+        },
+        {
+          "run": 5,
+          "status": 429,
+          "message": "Rate limit reached. Please wait a moment and try again. (API: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 13.220130283s.)"
+        }
+      ],
+      "reliable": false,
+      "aggregate": null
+    }
+  ]
+}
