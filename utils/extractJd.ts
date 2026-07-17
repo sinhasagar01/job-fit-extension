@@ -134,6 +134,33 @@ export async function extractJd(
     // fall back to it, but never to the hostname — that isn't a company.
     company = doc.querySelector('meta[property="og:site_name"]')?.getAttribute('content')?.trim() || null;
   }
+  if (!company) {
+    // Plain-markup last resort: the document <title> almost always follows a
+    // "<role> <sep> <company>" pattern ("Senior Frontend Engineer - Northwind
+    // Labs", "… | Acme", "… at Acme"). Split on the separators, drop the part
+    // that is the role we already extracted plus generic board noise, and trust
+    // it only when exactly one meaningful part remains (so a 3-part or
+    // role-only title yields nothing rather than a wrong guess).
+    const titleCompany = (): string | null => {
+      const docTitle = (doc.title || '').replace(/\s+/g, ' ').trim();
+      if (!docTitle) return null;
+      const parts = docTitle
+        .split(/\s+[|–—·-]\s+|\s+at\s+/i)
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (parts.length < 2) return null;
+      const roleLc = (title ?? '').trim().toLowerCase();
+      const noise = /^(careers?|jobs?|hiring|apply|home|job (posting|application|opening)s?)$/i;
+      const candidates = parts.filter((p) => {
+        const lc = p.toLowerCase();
+        if (noise.test(p)) return false;
+        if (!roleLc) return true;
+        return lc !== roleLc && !roleLc.includes(lc) && !lc.includes(roleLc);
+      });
+      return candidates.length === 1 ? candidates[0] : null;
+    };
+    company = titleCompany();
+  }
 
   // --- JD text: known selectors first, then a readability-style fallback ---
   const jdSelectors = [

@@ -132,6 +132,17 @@ describe('extractJd — company extraction', () => {
     expect(result!.text.length).toBeGreaterThanOrEqual(200);
   });
 
+  it('reads the employer from the "role - company" <title> on plain markup (no JSON-LD/og)', async () => {
+    // sample-job.html is the page in the store screenshots + eval harness: plain
+    // markup with no JSON-LD and no og:site_name. The only generic employer
+    // signal is the <title> "Senior Frontend Engineer - Northwind Labs".
+    const result = await extractJd(docFrom('sample-job.html'), 'https://careers.northwind.example/senior-frontend');
+    expect(result).not.toBeNull();
+    expect(result!.company).toBe('Northwind Labs');
+    expect(result!.title).toBe('Senior Frontend Engineer');
+    expect(result!.text.length).toBeGreaterThanOrEqual(200);
+  });
+
   it('uses JSON-LD, not a Lever location column, for the company', async () => {
     const result = await extractJd(docFrom('lever-palantir.html'), 'https://jobs.lever.co/palantir/x');
     expect(result!.company).toBe('Palantir Technologies');
