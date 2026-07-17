@@ -34,14 +34,14 @@ Test runner is **Vitest** (jsdom environment, globals enabled). Run `npm run tes
 
 ## Stack
 
-WXT + React 19 + TypeScript + Tailwind CSS + Recharts.
+WXT + React 19 + TypeScript + Tailwind CSS (v4, CSS-based `@theme` tokens). Self-hosted fonts via `@fontsource-variable/*` (Inter + Fraunces, latin subset).
 
 ## Folder conventions
 
 | Path | Purpose |
 |------|---------|
-| `entrypoints/` | WXT entrypoints: popup, content script, background |
-| `components/` | Shared React components |
+| `entrypoints/` | WXT entrypoints: side panel, options, content script, background |
+| `components/` | Shared React components (`components/panel/` holds side-panel UI) |
 | `utils/` | Parsing and scoring logic (PDF extraction, JD extraction, fit scorer) |
 
 ## Architecture
@@ -52,18 +52,19 @@ This is a **Chrome MV3 extension** built with [WXT](https://wxt.dev). WXT uses f
 |------|----------------|
 | `entrypoints/background.ts` | Service worker (MV3 background) |
 | `entrypoints/content.ts` | Content script injected into pages |
-| `entrypoints/popup/` | Toolbar popup (React SPA) |
+| `entrypoints/sidepanel/` | Chrome Side Panel (React SPA); toolbar icon opens it via `openPanelOnActionClick` |
+| `entrypoints/options/` | Options/settings page (API provider + key) |
 
 WXT auto-injects globals like `browser`, `defineBackground`, `defineContentScript` — no explicit imports needed for these.
 
 ### Product intent (from PRD.md)
 
-The extension is **JobFit ("Am I Fit?")** — a job-fit scorer that lives in the toolbar. Key data flows:
+The extension is **JobFit ("Am I Fit?")** — a job-fit scorer that opens as a Chrome Side Panel from the toolbar icon. Key data flows:
 
-1. **Resume ingestion** — user uploads PDF in popup; extract text client-side (pdf.js or similar); persist in `chrome.storage.local`.
+1. **Resume ingestion** — user uploads PDF in the panel; extract text client-side (pdf.js or similar); persist in `chrome.storage.local`.
 2. **JD extraction** — content script reads job description text from the active tab. Strategy: try known selectors for LinkedIn/Greenhouse/Lever/Ashby, fall back to readability-style main-content extraction.
 3. **Scoring engine** — `scoreFit(profileText, jdText)` returns typed JSON: `{ overall: number, dimensions: {...}, strengths: string[], gaps: string[], suggestion: string }`. **Must be built behind an interface with a mock client first** so all UI work requires zero API calls; real LLM client added last.
-4. **Results UI** — fit score (color-coded 1–10), Recharts radar chart across 5 dimensions, 3-bullet summary.
+4. **Results UI** — a tabbed workspace (Verdict / Evidence / Plan): color-coded 1–10 score ring, horizontal per-dimension bars, strengths/gaps/suggestion, and an action plan.
 5. **Usage limiter** — 5 free checks/day tracked in `chrome.storage.local`, resets daily.
 
 ### Storage

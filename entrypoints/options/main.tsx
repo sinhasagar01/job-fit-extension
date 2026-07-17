@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import '../popup/style.css';
+import './style.css';
 import OptionsApp from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

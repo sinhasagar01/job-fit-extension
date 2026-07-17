@@ -1,13 +1,7 @@
 import type { FitResult } from '../utils/scorer';
+import { DIMENSION_KEYS, type DimensionKey } from '../utils/dimensions';
 
-export const DIMENSION_KEYS = [
-  'skillsMatch',
-  'experienceLevel',
-  'domainIndustry',
-  'keywordCoverage',
-  'educationCerts',
-] as const;
-export type DimensionKey = (typeof DIMENSION_KEYS)[number];
+export { DIMENSION_KEYS, type DimensionKey };
 
 export function mean(xs: number[]): number {
   if (xs.length === 0) return NaN;

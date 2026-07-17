@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobFit Sidebar — Pre-score states (spec)</title>
+<!--
+  DESIGN SPEC — JobFit side panel, the three states before a score exists.
+  Static mockup. Match visually; port to React + TypeScript + Tailwind.
+  Do not copy this HTML/CSS into the extension.
+
+  Panel: 400px wide, full viewport height.
+  Structure: pinned brand bar -> scrollable body -> pinned footer.
+  No tab bar in these states - there is nothing to tab between until a
+  result exists. Tabs appear only in the results view (sidebar-results.html).
+
+  The "job found" card is the constant: the panel is already open on a job
+  page, so every state leads with what it read from the tab.
+  All copy here is illustrative; real content comes from extractJd.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E1B4B; --ink-soft:#4B4778; --ink-faint:#8886AD;
+    --indigo:#4F46E5; --indigo-bright:#6366F1; --indigo-deep:#4338CA;
+    --lavender:#EEF0FF; --lavender-deep:#E0E2FB;
+    --paper:#FBFBFE; --white:#fff; --line:#E7E7F3;
+    --green:#10B981; --amber:#F59E0B; --red:#EF4444;
+    --green-bg:#ECFDF5; --amber-bg:#FFFBEB; --red-bg:#FEF2F2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;background:#EBEAF4;color:var(--ink);
+    -webkit-font-smoothing:antialiased;padding:36px 24px 60px;line-height:1.5;
+  }
+  .page-head{max-width:1340px;margin:0 auto 32px;}
+  .page-head h1{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-0.02em;margin-bottom:6px;}
+  .page-head p{font-size:14px;color:var(--ink-soft);}
+
+  .rack{display:flex;gap:28px;justify-content:center;align-items:flex-start;flex-wrap:wrap;max-width:1340px;margin:0 auto;}
+  .col{width:400px;flex:0 0 400px;}
+  .col-head{margin-bottom:12px;padding-left:2px;}
+  .col-head .k{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--indigo);font-weight:500;letter-spacing:.06em;}
+  .col-head h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:3px 0 4px;letter-spacing:-0.01em;}
+  .col-head p{font-size:12.5px;color:var(--ink-soft);line-height:1.45;}
+
+  .panel{
+    width:400px;height:760px;background:var(--paper);
+    border:1px solid #D7D6E6;border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:0 18px 44px rgba(30,27,75,.14);
+  }
+  .panel-scroll{flex:1;overflow-y:auto;}
+  .panel-scroll::-webkit-scrollbar{width:8px;}
+  .panel-scroll::-webkit-scrollbar-thumb{background:#DCDBEC;border-radius:4px;}
+
+  .brandbar{
+    display:flex;align-items:center;gap:9px;padding:12px 16px;
+    border-bottom:1px solid var(--line);background:var(--white);flex-shrink:0;
+  }
+  .mk{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--indigo-bright),var(--indigo-deep));display:grid;place-items:center;flex-shrink:0;}
+  .brandbar .nm{font-weight:700;font-size:13.5px;letter-spacing:-0.01em;}
+  .brandbar .sp{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .brandbar .cnt{font-size:11.5px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
+  .gear{color:#B6B5CE;display:flex;cursor:pointer;}
+  .gear:hover{color:var(--indigo);}
+
+  .foot{
+    flex-shrink:0;border-top:1px solid var(--line);background:var(--white);
+    padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .foot a{font-size:12.5px;color:var(--indigo);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+  .foot .priv{font-size:11px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:5px;}
+  .foot .priv .dot{width:5px;height:5px;border-radius:50%;background:var(--green);}
+
+  /* ---- the found job card: shared across states ---- */
+  .found{
+    margin:16px;border:1px solid #CDEBDF;background:var(--green-bg);
+    border-radius:11px;padding:13px 14px;
+  }
+  .found .k{
+    font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--green);margin-bottom:5px;display:flex;align-items:center;gap:5px;
+  }
+  .found .role{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:2px;}
+  .found .co{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
+  .found .snip{
+    font-size:11.5px;color:var(--ink-soft);line-height:1.5;
+    padding-top:8px;border-top:1px solid #D3EDE2;
+  }
+  .found .src{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#7FB99F;
+    margin-top:7px;display:flex;align-items:center;gap:4px;
+  }
+
+  /* ---- ask block ---- */
+  .ask{padding:0 16px;}
+  .ask-say{
+    font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1.2;
+    letter-spacing:-0.02em;margin-bottom:7px;
+  }
+  .ask-sub{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:16px;}
+
+  .drop{
+    border:1.5px dashed var(--lavender-deep);border-radius:12px;
+    background:var(--white);padding:22px 16px;text-align:center;
+    cursor:pointer;transition:all .18s ease;margin-bottom:10px;
+  }
+  .drop:hover{border-color:var(--indigo);background:var(--lavender);}
+  .drop .ic{
+    width:38px;height:38px;border-radius:11px;background:var(--lavender);
+    display:grid;place-items:center;margin:0 auto 10px;color:var(--indigo);
+    transition:transform .18s ease;
+  }
+  .drop:hover .ic{transform:translateY(-2px);}
+  .drop .t{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+  .drop .h{font-size:11.5px;color:var(--ink-faint);}
+
+  .opt{
+    display:flex;align-items:center;gap:9px;width:100%;
+    border:1px solid var(--line);border-radius:10px;background:var(--white);
+    padding:11px 13px;cursor:pointer;transition:all .18s ease;font-family:inherit;text-align:left;
+  }
+  .opt:hover{border-color:var(--lavender-deep);background:var(--lavender);}
+  .opt .oi{color:var(--indigo);display:flex;flex-shrink:0;}
+  .opt .ot{flex:1;}
+  .opt .ot .a{font-size:12.5px;font-weight:600;line-height:1.3;}
+  .opt .ot .b{font-size:11px;color:var(--ink-faint);margin-top:1px;}
+  .opt .tag{
+    font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--ink-faint);
+    background:var(--lavender);padding:2px 7px;border-radius:100px;flex-shrink:0;
+  }
+
+  .why{
+    margin:18px 16px 0;padding:13px 14px;border-radius:10px;
+    background:var(--white);border:1px solid var(--line);
+  }
+  .why .h{
+    font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:9px;
+  }
+  .why .r{display:flex;gap:8px;font-size:11.5px;color:var(--ink-soft);line-height:1.45;margin-bottom:7px;}
+  .why .r:last-child{margin-bottom:0;}
+  .why .r svg{flex-shrink:0;margin-top:2px;color:var(--green);}
+
+  /* ---- file rows (ready state) ---- */
+  .files{padding:0 16px;}
+  .file{
+    display:flex;align-items:center;gap:10px;background:var(--white);
+    border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;
+  }
+  .file .fi{display:flex;flex-shrink:0;}
+  .file .fn{flex:1;font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .file .fx{color:#C3C2D8;cursor:pointer;display:flex;flex-shrink:0;}
+  .file .fx:hover{color:var(--red);}
+  .file.linked{background:#FAFAFE;}
+  .file .fmeta{font-size:10.5px;color:var(--ink-faint);}
+
+  .addlink{
+    display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+    border:1px dashed var(--lavender-deep);border-radius:10px;background:none;
+    padding:10px;cursor:pointer;font-family:inherit;
+    font-size:12px;font-weight:600;color:var(--indigo);transition:all .18s ease;
+  }
+  .addlink:hover{background:var(--lavender);border-color:var(--indigo);}
+
+  .cta{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:linear-gradient(135deg,var(--indigo-bright),var(--indigo));
+    color:#fff;border:none;border-radius:11px;padding:14px;cursor:pointer;
+    font-family:inherit;font-size:14.5px;font-weight:600;
+    box-shadow:0 4px 14px rgba(79,70,229,.26);
+    transition:transform .16s ease,box-shadow .16s ease;
+  }
+  .cta:hover{transform:translateY(-1px);box-shadow:0 7px 20px rgba(79,70,229,.34);}
+  .cta:disabled{background:#C9C7E8;box-shadow:none;cursor:default;transform:none;}
+  .cta-wrap{padding:16px;}
+  .cta-note{text-align:center;font-size:11px;color:var(--ink-faint);margin-top:9px;}
+
+  /* ---- no JD state ---- */
+  .miss{
+    margin:16px;border:1px solid #FBE3C0;background:var(--amber-bg);
+    border-radius:11px;padding:13px 14px;
+  }
+  .miss .k{
+    font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--amber);margin-bottom:5px;display:flex;align-items:center;gap:5px;
+  }
+  .miss .t{font-size:12.5px;font-weight:600;line-height:1.4;margin-bottom:3px;}
+  .miss .p{font-size:11.5px;color:var(--ink-soft);line-height:1.45;}
+
+  .ta{
+    width:100%;min-height:150px;border:1px solid var(--line);border-radius:11px;
+    background:var(--white);padding:12px;font-family:inherit;font-size:12.5px;
+    color:var(--ink);resize:vertical;line-height:1.55;
+  }
+  .ta::placeholder{color:#B5B4CC;}
+  .ta:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+  .ta-lab{
+    font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:8px;
+  }
+  .retry{
+    display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+    color:var(--indigo);background:none;border:none;cursor:pointer;font-family:inherit;
+    margin-top:10px;padding:0;
+  }
+  .retry:hover{text-decoration:underline;}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Pre-score states</h1>
+  <p>The sidebar is already open on the job page, so every state leads with what it found. The panel asks for one thing at a time.</p>
+</div>
+
+<div class="rack">
+
+  <!-- ===================================== 1. NEEDS RESUME -->
+  <div class="col">
+    <div class="col-head">
+      <div class="k">STATE 1</div>
+      <h2>Needs a resume</h2>
+      <p>Leads with the job it already found — so the upload has a reason, not an empty box asking for a favour.</p>
+    </div>
+
+    <div class="panel">
+      <div class="brandbar">
+        <span class="mk"><svg width="13" height="13" viewBox="0 0 18 18" fill="white"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg></span>
+        <span class="nm">JobFit</span>
+        <span class="sp"><span class="gear"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.89.06 2.04-.95 2.29-1.56.38-1.56 2.6 0 2.98.95.23 1.49 1.4.95 2.29-.84 1.37.73 2.94 2.1 2.1.89-.54 2.04-.06 2.29.95.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.29c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg></span></span>
+      </div>
+
+      <div class="panel-scroll">
+        <div class="found">
+          <div class="k">
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg>
+            Job found on this page
+          </div>
+          <div class="role">Senior Software Engineer, Frontend</div>
+          <div class="co">Phantom</div>
+          <div class="snip">Phantom is the modern money app used by tens of millions around the world. Our team is looking for a Senior Frontend Engineer to own…</div>
+          <div class="src">
+            <svg width="9" height="9" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 12H9v-2h2v2zm0-3H9V6h2v5z"/></svg>
+            jobs.ashbyhq.com · read from this tab only
+          </div>
+        </div>
+
+        <div class="ask">
+          <div class="ask-say">Now add your resume.</div>
+          <div class="ask-sub">Once. It's read on this device and reused for every job you check after this one.</div>
+
+          <div class="drop">
+            <div class="ic">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            </div>
+            <div class="t">Choose a PDF</div>
+            <div class="h">or drop it here</div>
+          </div>
+
+          <button class="opt">
+            <span class="oi"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14m-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 001.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 00-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg></span>
+            <span class="ot">
+              <span class="a">Add your LinkedIn profile</span>
+              <span class="b">Export as PDF from your profile page</span>
+            </span>
+            <span class="tag">OPTIONAL</span>
+          </button>
+        </div>
+
+        <div class="why">
+          <div class="h">Before you upload</div>
+          <div class="r"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg><span>The PDF is read in your browser. It is never uploaded to us.</span></div>
+          <div class="r"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg><span>No account. Nothing stored on a server. There isn't one.</span></div>
+          <div class="r"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg><span>Remove it any time and the text goes with it.</span></div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <span style="font-size:12.5px;color:var(--ink-faint);">Step 1 of 2</span>
+        <span class="priv"><span class="dot"></span> On your device</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== 2. READY -->
+  <div class="col">
+    <div class="col-head">
+      <div class="k">STATE 2</div>
+      <h2>Ready to score</h2>
+      <p>Both halves visible at once — what it found, what you gave it. The button is the only thing left to do.</p>
+    </div>
+
+    <div class="panel">
+      <div class="brandbar">
+        <span class="mk"><svg width="13" height="13" viewBox="0 0 18 18" fill="white"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg></span>
+        <span class="nm">JobFit</span>
+        <span class="sp">
+          <span class="cnt">4 checks left</span>
+          <span class="gear"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.89.06 2.04-.95 2.29-1.56.38-1.56 2.6 0 2.98.95.23 1.49 1.4.95 2.29-.84 1.37.73 2.94 2.1 2.1.89-.54 2.04-.06 2.29.95.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.29c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg></span>
+        </span>
+      </div>
+
+      <div class="panel-scroll">
+        <div class="found">
+          <div class="k">
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg>
+            Job found on this page
+          </div>
+          <div class="role">Senior Software Engineer, Frontend</div>
+          <div class="co">Phantom</div>
+          <div class="snip">Phantom is the modern money app used by tens of millions around the world. Our team is looking for a Senior Frontend Engineer to own the architecture of our core wallet experience and mentor a growing frontend team…</div>
+          <div class="src">
+            <svg width="9" height="9" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 12H9v-2h2v2zm0-3H9V6h2v5z"/></svg>
+            jobs.ashbyhq.com · read from this tab only
+          </div>
+        </div>
+
+        <div style="padding:4px 16px 12px;">
+          <div style="font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px;">Scoring against</div>
+        </div>
+
+        <div class="files">
+          <div class="file">
+            <span class="fi"><svg width="15" height="15" viewBox="0 0 20 20" fill="var(--green)"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg></span>
+            <span class="fn">Sagar_Kumar_Resume.pdf<br><span class="fmeta">Résumé · 2 pages</span></span>
+            <span class="fx"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+          <div class="file linked">
+            <span class="fi"><svg width="15" height="15" viewBox="0 0 20 20" fill="var(--indigo)"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg></span>
+            <span class="fn">Profile.pdf<br><span class="fmeta">LinkedIn · merged in</span></span>
+            <span class="fx"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+
+        <div class="cta-wrap" style="padding-top:6px;">
+          <button class="cta">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="currentColor"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg>
+            Am I Fit?
+          </button>
+          <div class="cta-note">4 of 5 free checks remaining today · about 6 seconds</div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <a href="#"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Past checks</a>
+        <span class="priv"><span class="dot"></span> On your device</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================== 3. NO JD -->
+  <div class="col">
+    <div class="col-head">
+      <div class="k">STATE 3</div>
+      <h2>No job found</h2>
+      <p>Says what happened and what to do — not just an empty textarea. Offers a retry before asking for manual work.</p>
+    </div>
+
+    <div class="panel">
+      <div class="brandbar">
+        <span class="mk"><svg width="13" height="13" viewBox="0 0 18 18" fill="white"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg></span>
+        <span class="nm">JobFit</span>
+        <span class="sp">
+          <span class="cnt">4 checks left</span>
+          <span class="gear"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.89.06 2.04-.95 2.29-1.56.38-1.56 2.6 0 2.98.95.23 1.49 1.4.95 2.29-.84 1.37.73 2.94 2.1 2.1.89-.54 2.04-.06 2.29.95.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.29c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg></span>
+        </span>
+      </div>
+
+      <div class="panel-scroll">
+        <div class="miss">
+          <div class="k">
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 12H9v-2h2v2zm0-3H9V6h2v5z"/></svg>
+            Nothing readable on this page
+          </div>
+          <div class="t">This page doesn't look like a job posting</div>
+          <div class="p">Some sites load the description after the page settles, or hide it behind a tab. If the posting is visible to you, try reading the page again.</div>
+          <button class="retry">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Read this page again
+          </button>
+        </div>
+
+        <div class="files" style="margin-bottom:16px;">
+          <div class="file">
+            <span class="fi"><svg width="15" height="15" viewBox="0 0 20 20" fill="var(--green)"><path d="M7.6 13.6l-3.2-3.2L3 11.8l4.6 4.6L17 7l-1.4-1.4z"/></svg></span>
+            <span class="fn">Sagar_Kumar_Resume.pdf<br><span class="fmeta">Résumé · ready</span></span>
+            <span class="fx"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+
+        <div style="padding:0 16px;">
+          <div class="ta-lab">Paste the description instead</div>
+          <textarea class="ta" placeholder="Copy the job description from the page and paste it here…"></textarea>
+        </div>
+
+        <div class="cta-wrap">
+          <button class="cta" disabled>
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="currentColor"><path d="M9 2L4 9h4.5L7 16l7-9H9.5L11 2z"/></svg>
+            Am I Fit?
+          </button>
+          <div class="cta-note">Paste at least a paragraph to score</div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <a href="#"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Past checks</a>
+        <span class="priv"><span class="dot"></span> On your device</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

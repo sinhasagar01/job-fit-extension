@@ -4,7 +4,7 @@ Post-launch task list in build order. Grouped into waves — each wave depends o
 
 **Current version:** 1.0.0 (live in Chrome Web Store)
 
-> The original MVP task list is archived in `TASKS-mvp.md`. Note that it describes the original *plan*, not what shipped (e.g. it specifies the Anthropic SDK and a persistent content script; the build uses Gemini/Groq and on-demand `executeScript` injection).
+> The original MVP task list is archived in `TASKS-mvp.md`. Note that it describes the original _plan_, not what shipped (e.g. it specifies the Anthropic SDK and a persistent content script; the build uses Gemini/Groq and on-demand `executeScript` injection).
 
 ---
 
@@ -17,6 +17,7 @@ Blocks every other wave. This is the independent verifier that makes autonomous 
 Install and configure the test runner with conventions documented so future sessions follow them.
 
 **Deliverables**
+
 - Install `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `@vitest/coverage-v8`
 - `vitest.config.ts` with `environment: 'jsdom'`, globals enabled, and a `test/setup.ts` importing jest-dom matchers
 - `npm run test` (watch) and `npm run test:run` (single pass, CI-safe) scripts in `package.json`
@@ -33,6 +34,7 @@ Install and configure the test runner with conventions documented so future sess
 The highest-value pure logic in the codebase and the easiest place to build understanding.
 
 **Deliverables**
+
 - `utils/scorer.test.ts` covering:
   - Valid payload → returns a `FitResult` with all fields intact
   - Dimension score above 10 / below 1 → clamped into range
@@ -51,6 +53,7 @@ The highest-value pure logic in the codebase and the easiest place to build unde
 Make the harness an always-on gate rather than something you remember to run.
 
 **Deliverables**
+
 - Add `npm run test:run` as a step in `.github/workflows/ci.yml`, between `compile` and `build`
 
 **Verification**
@@ -67,6 +70,7 @@ Each has a real test as its verifier. This is where `/goal` first earns its plac
 Currently the counter decrements before `scoreFit` resolves, so a failed API call still costs the user a check (specced as an MVP shortcut in `TASKS-mvp.md` Task 7).
 
 **Deliverables**
+
 - Test asserting `decrementCheck` is **not** called when `scoreFit` rejects (API error, malformed JSON, rate limit)
 - Test asserting `decrementCheck` **is** called exactly once on success
 - Reorder in `App.tsx` `handleFit` so the decrement happens only after `scoreFit` resolves successfully
@@ -81,6 +85,7 @@ Currently the counter decrements before `scoreFit` resolves, so a failed API cal
 The same resume + same JD must return the identical result, make no second network call, and not decrement the counter.
 
 **Deliverables**
+
 - Deterministic cache key: hash of `profileText + jdText` (stable across popup sessions)
 - Cache stored in `chrome.storage.local`; entry holds the `FitResult` and a timestamp
 - `handleFit` checks the cache before selecting a scoring client; on hit, returns the stored result immediately
@@ -90,7 +95,7 @@ The same resume + same JD must return the identical result, make no second netwo
 **Verification**
 `npm run test:run` exits 0. Manually: score a job, note remaining checks, click "Check another job" and re-score the same page — result identical, instantly, counter unchanged.
 
-**`/goal` candidate.** Condition: *"npm run test:run exits 0 with all four caching tests passing; no file outside utils/, entrypoints/popup/App.tsx, and test files is modified; no change to buildPrompt or validateFitResult."* Cap: 12 turns.
+**`/goal` candidate.** Condition: _"npm run test:run exits 0 with all four caching tests passing; no file outside utils/, entrypoints/popup/App.tsx, and test files is modified; no change to buildPrompt or validateFitResult."_ Cap: 12 turns.
 
 ---
 
@@ -99,6 +104,7 @@ The same resume + same JD must return the identical result, make no second netwo
 Three known sites fail detection. Fix them without regressing the working ones.
 
 **Deliverables**
+
 - `test/fixtures/` containing saved HTML for at least 9 job pages:
   - **Known failures:** `jobs.ashbyhq.com/phantom/…`, `ycombinator.com/companies/solve-intelligence/jobs/…`, `commenda.io/careers/product-builder`
   - **Known working:** LinkedIn, Greenhouse, Lever, a standard Ashby posting, plus two arbitrary career pages
@@ -109,7 +115,7 @@ Three known sites fail detection. Fix them without regressing the working ones.
 **Verification**
 `npm run test:run` exits 0 across all fixtures. Manually: open each of the three previously-failing live URLs and confirm the JD preview appears instead of the paste-JD fallback.
 
-**`/goal` candidate.** Condition: *"npm run test:run exits 0 with every fixture in test/fixtures/ passing extractJd's ≥200-char assertion; no file outside utils/extractJd.ts and test/ is modified."* Cap: 15 turns. Collect the fixtures yourself first — the loop can't browse.
+**`/goal` candidate.** Condition: _"npm run test:run exits 0 with every fixture in test/fixtures/ passing extractJd's ≥200-char assertion; no file outside utils/extractJd.ts and test/ is modified."_ Cap: 15 turns. Collect the fixtures yourself first — the loop can't browse.
 
 ---
 
@@ -122,6 +128,7 @@ Touches core scoring. Human-reviewed; no autonomous loops.
 `commenda.io/careers/product-builder` produced a result with no suggestion — either the model omitted it and validation let it through, or the UI dropped it.
 
 **Deliverables**
+
 - Reproduce first: a test feeding a payload with `suggestion` missing/empty through `validateFitResult`
 - Determine which layer failed (validation gap vs UI render) before changing anything
 - Fix the actual layer; add a test locking the behaviour
@@ -144,6 +151,7 @@ The interview-critical work. Build the eval harness by hand; do not automate the
 > and live calls. Run per `eval/README.md`, then commit `eval/baselines/*.json`.
 
 **Deliverables**
+
 - 5–8 fixed (resume, JD) pairs spanning the range: strong fit, mid fit, weak fit
 - A script that runs each pair N times against a provider and reports per-dimension mean and variance
 - Recorded baseline output for both Gemini and Groq
@@ -162,6 +170,7 @@ Running the harness twice on the same pairs produces comparable statistics — t
 > meets the bound, lock it in at `createOpenAICompatClient`'s call site.
 
 **Deliverables**
+
 - Diagnose the variance source (temperature, prompt adherence, model choice) using the harness
 - Apply one change at a time, re-running the harness after each
 - Document what was tried and what moved the numbers
@@ -181,20 +190,43 @@ Harness shows variance within an agreed bound (define it before starting) across
 
 Human-driven design work. UI quality isn't mechanically verifiable, so no loops.
 
-## Task 5.1 — Chrome Side Panel
+## Task 5.1 — migrate the popup to Chrome's Side Panel API.
 
-**Deliverables**
-- Migrate/extend the popup to Chrome's Side Panel API (more width; survives clicking outside)
-- Design the wider layout deliberately — do not just stretch the 380px popup
+Design spec: read design/sidebar-results.html (the results view) and
+design/sidebar-states.html (the three pre-score states: needs-resume,
+ready, no-JD-found). Each file's header comment states its constraints.
 
-**Verification**
-Manual: open the side panel, click elsewhere on the page, confirm state persists.
+These are static mockups — match them visually, but port to our stack
+(React + TypeScript + Tailwind). Do not paste the raw HTML/CSS in. Derive
+Tailwind classes from the mockups' CSS variables; they match our existing
+tokens (indigo #4F46E5, lavender #EEF0FF, ink #1E1B4B, Fraunces display +
+Inter body, green/amber/red score bands).
+
+Requirements:
+
+- Check the WXT docs for the correct side-panel entrypoint convention
+  before writing anything; add the sidePanel permission in wxt.config.ts
+- Panel 400px wide, full height; pinned brand bar and footer, scrollable body
+- Keep the existing state machine and all existing logic — this is a
+  view-layer migration, not a rewrite of scoring, storage, or extractJd
+- The tab bar (Verdict / Evidence / Plan / Chat) renders only in
+  showing-results; Chat is disabled with a SOON badge
+- The "job found" card is constant across all pre-score states
+- Loading state is not in the mockups: reuse the ready-state layout with
+  the job card visible and a skeleton where the verdict card will land —
+  do not blank the panel
+- All copy in the mockups is illustrative; real content comes from
+  FitResult and extractJd
+- Responsive, visible keyboard focus, prefers-reduced-motion respected
+
+Show me the plan first.
 
 ---
 
 ## Task 5.2 — Full-page detailed view + history
 
 **Deliverables**
+
 - A full-page view (extension page) showing the detailed result
 - "Open detailed view" CTA from the popup/panel after a score
 - History of past checks, backed by the Wave 1.2 cache
@@ -214,9 +246,9 @@ Manual: score a job, open the detailed view, close everything, reopen — the pa
 
 Adopt each tool when a task actually calls for it, not preemptively.
 
-| When | Tool | Why then |
-|---|---|---|
-| Now | `/code-review` before every commit | Replaces the Claude-web copy-paste review loop |
-| Wave 0.3 | CI running `test:run` | The always-on independent verifier |
-| Wave 1.2 / 1.3 | `/goal` | First tasks with a real, deterministic verifier |
-| If repetition appears | A custom skill in `.claude/skills/` | Only once the same multi-step prompt recurs |
+| When                  | Tool                                | Why then                                        |
+| --------------------- | ----------------------------------- | ----------------------------------------------- |
+| Now                   | `/code-review` before every commit  | Replaces the Claude-web copy-paste review loop  |
+| Wave 0.3              | CI running `test:run`               | The always-on independent verifier              |
+| Wave 1.2 / 1.3        | `/goal`                             | First tasks with a real, deterministic verifier |
+| If repetition appears | A custom skill in `.claude/skills/` | Only once the same multi-step prompt recurs     |
