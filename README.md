@@ -4,8 +4,7 @@
 
 JobFit is a Chrome extension that compares your resume against any job posting and returns an instant fit score with a five-dimension breakdown and a concrete action plan — all without your resume ever leaving your device.
 
-[**Add to Chrome →**](https://chromewebstore.google.com/detail/JobFit/lghnjblnkagdmfhemmdocnicficmniak) · [Landing page](https://sinhasagar01.github.io/job-fit-extension/) · [Architecture](ARCHITECTURE.md)
-
+[**Add to Chrome →**](https://chromewebstore.google.com/detail/JobFit/lghnjblnkagdmfhemmdocnicficmniak) · [Landing page](https://sinhasagar01.github.io/job-fit-extension/)
 ![JobFit open beside a job posting](docs/assets/hero.png)
 
 ---
@@ -80,8 +79,6 @@ Past checks live in a full-page tracker — filter by fit band, search by role o
 ## Architecture in one paragraph
 
 The side panel is the only UI surface. Clicking the toolbar icon fires `action.onClicked`, which grants `activeTab` for that tab and opens the panel; a background→panel message then triggers `extractJd` via `chrome.scripting.executeScript` — a one-time, read-only injection, with no persistent content script. Scoring sits behind a `ScoringClient` interface with Gemini and Groq implementations plus a mock, and every response passes through `validateFitResult`, which clamps each dimension and computes the overall as a weighted mean rather than trusting the model's own number. Results are cached in `chrome.storage.local` keyed on a hash of profile + JD, so an identical check costs neither an API call nor a free check.
-
-Full detail, including the alternatives considered for each decision: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
