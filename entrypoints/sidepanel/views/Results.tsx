@@ -3,6 +3,7 @@ import type { FitResult } from '../../../utils/scorer';
 import { DIMENSION_LABELS, strongestWeakest } from '../../../utils/dimensions';
 import {
   evidenceLead,
+  hasWeakAxis,
   splitActionStep,
   verdictHeadline,
   verdictSummary,
@@ -141,16 +142,18 @@ function VerdictPane({ result, hidden, onSeePlan }: { result: FitResult; hidden:
             <div className="text-xs leading-[1.45] text-ink-soft">{verdictSummary(result.dimensions)}</div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <div className="flex-1 rounded-lg bg-good-bg p-[9px_10px] text-[11px] leading-[1.4]">
-            <div className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.06em] text-good">Strongest</div>
-            <div className="text-ink-soft">{DIMENSION_LABELS[strongest]} — {result.dimensions[strongest]}/10</div>
+        {hasWeakAxis(result.dimensions) && (
+          <div className="flex gap-2">
+            <div className="flex-1 rounded-lg bg-good-bg p-[9px_10px] text-[11px] leading-[1.4]">
+              <div className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.06em] text-good">Strongest</div>
+              <div className="text-ink-soft">{DIMENSION_LABELS[strongest]} — {result.dimensions[strongest]}/10</div>
+            </div>
+            <div className="flex-1 rounded-lg bg-bad-bg p-[9px_10px] text-[11px] leading-[1.4]">
+              <div className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.06em] text-bad">Weakest</div>
+              <div className="text-ink-soft">{DIMENSION_LABELS[weakest]} — {result.dimensions[weakest]}/10</div>
+            </div>
           </div>
-          <div className="flex-1 rounded-lg bg-bad-bg p-[9px_10px] text-[11px] leading-[1.4]">
-            <div className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.06em] text-bad">Weakest</div>
-            <div className="text-ink-soft">{DIMENSION_LABELS[weakest]} — {result.dimensions[weakest]}/10</div>
-          </div>
-        </div>
+        )}
       </div>
 
       <button
