@@ -143,12 +143,14 @@ Touches core scoring. Human-reviewed; no autonomous loops.
 
 The interview-critical work. Build the eval harness by hand; do not automate the tuning.
 
-## Task 3.1 — Eval harness 🚧 Blocked (needs API keys)
+## Task 3.1 — Eval harness 🚧 Gemini baseline pending
 
-> Harness, 6 fit-spanning pairs, deterministic stats (unit-tested), and the
-> `vite-node` runner are built and committed. **Blocked** on the last
-> deliverable — recording the real Gemini/Groq baselines — which needs API keys
-> and live calls. Run per `eval/README.md`, then commit `eval/baselines/*.json`.
+> Harness (+ reliability recording and the `✓ COMPLETE` completeness gate),
+> 6 fit-spanning pairs, deterministic stats (unit-tested), and the `vite-node`
+> runner are built and committed. **Groq baseline recorded** —
+> `eval/baselines/groq.json`, `✓ COMPLETE`. **Gemini baseline still pending**:
+> the free-tier quota exhausted mid-run, so rerun after it resets (per
+> `eval/README.md`) and commit `eval/baselines/gemini.json`.
 
 **Deliverables**
 
@@ -161,13 +163,18 @@ A baseline is valid only if the harness reports `✓ COMPLETE` — every pair sc
 
 ---
 
-## Task 3.2 — Groq score consistency 🚧 Blocked (needs API keys)
+## Task 3.2 — Groq score consistency ✅
 
-> Experiment tooling (temperature/seed knobs, `--temperature`/`--seed` flags,
-> `eval:compare`), the one-change-at-a-time plan, and the **agreed bound**
-> (per-dimension stddev ≤ 1.0, overall ≤ 0.75) are ready. **Blocked** on running
-> the experiments against real Groq/Gemini, which needs API keys. Once a config
-> meets the bound, lock it in at `createOpenAICompatClient`'s call site.
+> **Resolved — and the premise was wrong.** The inconsistency wasn't score
+> variance; it was Groq's strict `response_format: json_object` failing to emit
+> valid JSON (~40% `400 "Failed to generate JSON"` on the harder pairs).
+> Dropping it (relying on the brace-extraction backstop) took a run from broken
+> to `✓ COMPLETE`, and the underlying scores were already **within the agreed
+> bound**: the complete Groq baseline (temp 0.1, N=5) has worst per-dimension
+> stddev **0.49** (≤ 1.0) and worst overall **0.49** (≤ 0.75) — most dimensions
+> `sd 0.00`. No temperature/seed tuning was needed. The one change that moved
+> the numbers: `createOpenAICompatClient` no longer sends `json_object`. See
+> `eval/baselines/groq.json`.
 
 **Deliverables**
 

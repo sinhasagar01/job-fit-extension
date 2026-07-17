@@ -1,0 +1,523 @@
+{
+  "provider": "groq",
+  "model": "llama-3.3-70b-versatile",
+  "temperature": 0.1,
+  "seed": null,
+  "runs": 5,
+  "delay": 4000,
+  "retries": 3,
+  "complete": true,
+  "timestamp": "2026-07-17T08:38:47.558Z",
+  "pairs": [
+    {
+      "id": "strong-frontend",
+      "expectedBand": "strong",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 8,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 8,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "experienceLevel": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          "domainIndustry": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 8,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "educationCerts": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "strong-data-scientist",
+      "expectedBand": "strong",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 7.2,
+          "variance": 0.15999999999999998,
+          "stddev": 0.39999999999999997,
+          "values": [
+            7,
+            7,
+            7,
+            7,
+            8
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 8,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "experienceLevel": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "domainIndustry": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 7.2,
+            "variance": 0.15999999999999998,
+            "stddev": 0.39999999999999997,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              8
+            ]
+          },
+          "educationCerts": {
+            "mean": 9,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "mid-backend",
+      "expectedBand": "mid",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 4,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 4,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "experienceLevel": {
+            "mean": 3,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "domainIndustry": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 5,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "educationCerts": {
+            "mean": 5,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "mid-product-manager",
+      "expectedBand": "mid",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 5.2,
+          "variance": 0.15999999999999998,
+          "stddev": 0.39999999999999997,
+          "values": [
+            6,
+            5,
+            5,
+            5,
+            5
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 7,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "experienceLevel": {
+            "mean": 4.2,
+            "variance": 0.15999999999999998,
+            "stddev": 0.39999999999999997,
+            "values": [
+              5,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "domainIndustry": {
+            "mean": 3.2,
+            "variance": 0.15999999999999998,
+            "stddev": 0.39999999999999997,
+            "values": [
+              4,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "educationCerts": {
+            "mean": 5.2,
+            "variance": 0.15999999999999998,
+            "stddev": 0.39999999999999997,
+            "values": [
+              6,
+              5,
+              5,
+              5,
+              5
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "weak-ml-research",
+      "expectedBand": "weak",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 2,
+          "variance": 0,
+          "stddev": 0,
+          "values": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 2,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "experienceLevel": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "domainIndustry": {
+            "mean": 2,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 1,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "educationCerts": {
+            "mean": 2,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "weak-enterprise-sales",
+      "expectedBand": "weak",
+      "runs": 5,
+      "succeeded": 5,
+      "retries": 0,
+      "failures": [],
+      "reliable": true,
+      "aggregate": {
+        "overall": {
+          "mean": 2.6,
+          "variance": 0.24,
+          "stddev": 0.4898979485566356,
+          "values": [
+            3,
+            2,
+            3,
+            2,
+            3
+          ]
+        },
+        "dimensions": {
+          "skillsMatch": {
+            "mean": 2,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "experienceLevel": {
+            "mean": 1.6,
+            "variance": 0.24,
+            "stddev": 0.4898979485566356,
+            "values": [
+              2,
+              1,
+              2,
+              1,
+              2
+            ]
+          },
+          "domainIndustry": {
+            "mean": 4,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "keywordCoverage": {
+            "mean": 2,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "educationCerts": {
+            "mean": 6,
+            "variance": 0,
+            "stddev": 0,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
