@@ -230,7 +230,7 @@ Show me the plan first.
 
 ---
 
-## Task 5.2 — Full-page detailed view + history
+## Task 5.2 — Full-page detailed view + history ✅
 
 **Deliverables**
 
