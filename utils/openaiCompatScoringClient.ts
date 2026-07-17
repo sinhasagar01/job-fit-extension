@@ -38,7 +38,10 @@ export function createOpenAICompatClient({
           messages: [{ role: 'user', content: prompt }],
           temperature,
           max_tokens: 2048,
-          response_format: { type: 'json_object' },
+          // No response_format: json_object. Groq's strict JSON mode returns a
+          // 400 "Failed to generate JSON" when the model strays from strict
+          // JSON (seen on harder pairs). We instead let it return text and rely
+          // on the brace-extraction backstop below to pull the {…} out.
           ...(seed !== undefined ? { seed } : {}),
         }),
       };

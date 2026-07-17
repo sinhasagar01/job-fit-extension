@@ -39,12 +39,14 @@ const base = { baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-
 afterEach(() => vi.unstubAllGlobals());
 
 describe('createOpenAICompatClient — request parameters', () => {
-  it('defaults to temperature 0.1 and omits seed (shipped behaviour)', async () => {
+  it('defaults to temperature 0.1, omits seed, and does not force json_object mode', async () => {
     const { bodyOf } = stubFetchCapturing();
     await createOpenAICompatClient(base).scoreFit('profile', 'jd');
     const body = bodyOf();
     expect(body.temperature).toBe(0.1);
     expect('seed' in body).toBe(false);
+    // Groq's strict JSON mode 400s on stray output; we rely on the backstop.
+    expect('response_format' in body).toBe(false);
   });
 
   it('sends the configured temperature and seed', async () => {
