@@ -247,6 +247,36 @@ Manual: score a job, open the detailed view, close everything, reopen — the pa
 
 ---
 
+## Task 5.3 — Pre-screenshot display fixes ✅
+
+> Three bugs found in the built extension while re-capturing store screenshots,
+> all fixed.
+
+**Fixes**
+
+- **Top-of-range copy called a strong dimension a "gap."** At 10/10 the Verdict
+  summary read "…Skills is the gap at 9/10" and rendered a red "WEAKEST — 9/10"
+  box; the Evidence lead claimed a drag that didn't exist. Added a weak-axis
+  floor (`hasWeakAxis`, weak = band ≤ 6) gating `verdictSummary`, the
+  Strongest/Weakest split in `Results.tsx`, and `evidenceLead`. A 7+ is never a
+  gap. (`60bc22a`)
+- **Company missing everywhere** (no panel company line, blank tracker Company
+  column). `extractJd` returned `null`: the old selectors grabbed a Lever
+  location or the hostname. Rebuilt employer extraction — schema.org JSON-LD
+  `hiringOrganization`, then `og:site_name`, then a "role – company" `<title>`
+  fallback for plain-markup pages (e.g. the `sample-job.html` used in the store
+  screenshots). Added `test/fixtures/sample-job.html`. (`803ae6f`, `7be5f6f`)
+
+**Verification**
+Pure-function boundary tests in `verdictCopy.test.ts` (7+ never a gap; boundary
+at 6/7; no "gap"/no drag at the top). `extractJd` company tests incl. plain
+markup → `Northwind Labs`, Lever → the employer (not its location column),
+no-source → `null`. Cross-checked in real Chromium: `sample-job.html` resolves
+company via title-parse to `Northwind Labs`. All 119 tests pass; `compile` and
+`build` clean.
+
+---
+
 # Not doing
 
 - **Storybook** — four small components don't justify the setup cost. Revisit if the Wave 5 redesign grows the component count.
