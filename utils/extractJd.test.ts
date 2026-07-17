@@ -123,6 +123,32 @@ describe('extractJd — real Greenhouse + Lever fixtures', () => {
   });
 });
 
+describe('extractJd — company extraction', () => {
+  it('reads the employer from schema.org JSON-LD hiringOrganization', async () => {
+    const result = await extractJd(docFrom('generic-jsonld-job.html'), 'https://northwind.example/careers/senior-frontend');
+    expect(result).not.toBeNull();
+    expect(result!.company).toBe('Northwind Labs');
+    expect(result!.title).not.toBeNull();
+    expect(result!.text.length).toBeGreaterThanOrEqual(200);
+  });
+
+  it('uses JSON-LD, not a Lever location column, for the company', async () => {
+    const result = await extractJd(docFrom('lever-palantir.html'), 'https://jobs.lever.co/palantir/x');
+    expect(result!.company).toBe('Palantir Technologies');
+    expect(result!.company).not.toBe('New York, NY');
+  });
+
+  it('returns null company (never the hostname) when no employer source exists', async () => {
+    const filler = 'We need a backend engineer to build reliable services and APIs at real scale. '.repeat(4);
+    const doc = new JSDOM(
+      `<!doctype html><html><head><title>Job</title></head><body><h1>Backend Engineer</h1><main><p>${filler}</p></main></body></html>`
+    ).window.document;
+    const result = await extractJd(doc, 'https://careers.acme-corp.com/jobs/42');
+    expect(result).not.toBeNull();
+    expect(result!.company).toBeNull();
+  });
+});
+
 // LinkedIn uses a persistent #job-details container. Its markup is gated/JS and
 // couldn't be captured as a real fixture here, so this stays a synthetic guard
 // on the selector path — flagged as unverified against live LinkedIn markup.

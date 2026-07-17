@@ -93,21 +93,46 @@ export async function extractJd(
   if (!title) title = doc.title.trim() || null;
 
   // --- company ---
+  // Prefer the employer from schema.org JobPosting JSON-LD — the reliable
+  // generic source (a hostname or Lever's location column are not the company).
+  const jsonLdCompany = (): string | null => {
+    for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
+      let data: unknown;
+      try {
+        data = JSON.parse(script.textContent ?? '');
+      } catch {
+        continue;
+      }
+      const graph = (data as { '@graph'?: unknown })['@graph'];
+      const nodes = Array.isArray(data) ? data : Array.isArray(graph) ? graph : [data];
+      for (const node of nodes) {
+        const obj = node as { '@type'?: unknown; hiringOrganization?: unknown };
+        const type = obj['@type'];
+        const isJob = Array.isArray(type) ? type.includes('JobPosting') : type === 'JobPosting';
+        if (!isJob) continue;
+        const org = obj.hiringOrganization;
+        const name = typeof org === 'string' ? org : (org as { name?: unknown } | null)?.name;
+        if (typeof name === 'string' && name.trim()) return name.trim();
+      }
+    }
+    return null;
+  };
+
   const companySelectors = [
-    'a.topcard__org-name-link',         // LinkedIn
-    '.top-card-layout__second-title',   // LinkedIn (alt)
-    '.company-name',                    // Greenhouse
-    '.posting-category:first-child',    // Lever
-    '[data-testid="company-name"]',     // Ashby
+    'a.topcard__org-name-link',       // LinkedIn
+    '.top-card-layout__second-title', // LinkedIn (alt)
+    '.company-name',                  // Greenhouse
+    '[data-testid="company-name"]',   // Ashby
   ];
-  let company: string | null = null;
+  let company: string | null = jsonLdCompany();
   for (const sel of companySelectors) {
-    company = getTextContent(sel);
     if (company) break;
+    company = getTextContent(sel);
   }
   if (!company) {
-    const ogSite = doc.querySelector('meta[property="og:site_name"]')?.getAttribute('content')?.trim();
-    company = ogSite || (url ? url.hostname.replace(/^www\./, '') : null);
+    // og:site_name is the site's name (often the employer on a company site);
+    // fall back to it, but never to the hostname — that isn't a company.
+    company = doc.querySelector('meta[property="og:site_name"]')?.getAttribute('content')?.trim() || null;
   }
 
   // --- JD text: known selectors first, then a readability-style fallback ---
