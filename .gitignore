@@ -20,6 +20,9 @@ web-ext.config.ts
 # Throwaway mock eval baseline (real gemini/groq baselines are committed)
 eval/baselines/mock.json
 
+# Quarantined invalid baselines (complete:false runs) — never commit these
+eval/baselines/.incomplete/
+
 # Local-only docs (not part of the tracked project)
 ARCHITECTURE.md
 AGENTS.md

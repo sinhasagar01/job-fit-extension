@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname } from 'node:path';
+import { baselineOutputPath } from './baselinePath';
 import { createRealScoringClient } from '../utils/realScoringClient';
 import { createOpenAICompatClient } from '../utils/openaiCompatScoringClient';
 import { mockScoringClient } from '../utils/mockScoringClient';
@@ -177,14 +178,16 @@ async function main(): Promise<number> {
     timestamp: new Date().toISOString(),
     pairs: report,
   };
-  const dir = resolve(process.cwd(), 'eval/baselines');
-  mkdirSync(dir, { recursive: true });
-  const out = resolve(dir, `${config.provider}.json`);
+  // Invalid runs are quarantined under .incomplete/ (gitignored) so a failed
+  // baseline can never be staged as a real one; valid runs write the committed
+  // path.
+  const out = baselineOutputPath(config.provider, complete);
+  mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(baseline, null, 2));
   console.log(`\nBaseline written to ${out}`);
 
   if (!complete && !config.allowIncomplete) {
-    console.log('This baseline is INVALID (incomplete). Re-run — or pass --allow-incomplete for exploration only.');
+    console.log('This baseline is INVALID (incomplete) — quarantined under .incomplete/ (gitignored). Re-run — or pass --allow-incomplete for exploration only.');
     return 1;
   }
   if (!complete) console.log('⚠ --allow-incomplete: kept despite gaps; NOT valid for eval:compare.');

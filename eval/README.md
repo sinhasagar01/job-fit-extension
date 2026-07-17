@@ -52,11 +52,20 @@ sound:
 
 ## Recording baselines
 
-Each run writes `baselines/<provider>.json` (config + `complete` + per-pair
-`{ runs, succeeded, retries, failures:[{run,status,message}], reliable, aggregate }`).
-A baseline is only valid for Task 3.1 / comparison when it printed `✓ COMPLETE`.
+The output **path depends on validity**, so an invalid run can never be staged
+as a real baseline:
+
+- **Valid** (`✓ COMPLETE`) runs write `baselines/<provider>.json` — the committed
+  path that Task 3.1 and `eval:compare` read.
+- **Invalid** (`✗ INCOMPLETE`) runs write `baselines/.incomplete/<provider>.json`
+  instead — a **gitignored** quarantine directory, so a stray `git add -A` can't
+  commit a failed run (which is what happened in 69f7cfa).
+
+Each file contains config + `complete` + per-pair
+`{ runs, succeeded, retries, failures:[{run,status,message}], reliable, aggregate }`.
 **Commit `baselines/gemini.json` and `baselines/groq.json`** once complete — they
-contain only scores, no secrets. `baselines/mock.json` is throwaway (gitignored).
+contain only scores, no secrets. `baselines/mock.json` is throwaway (gitignored),
+as is everything under `baselines/.incomplete/`.
 
 ## Task 3.2 — Groq variance experiments
 
