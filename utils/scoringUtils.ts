@@ -54,6 +54,21 @@ export function apiDetail(body: unknown): string {
   return '';
 }
 
+/**
+ * True when a 429 body indicates an exhausted quota (Gemini
+ * `RESOURCE_EXHAUSTED` / "exceeded your current quota") rather than a momentary
+ * rate spike. A quota won't clear mid-run, so the eval harness treats these as
+ * non-retriable (fail fast) while real transient 429/503s stay retriable.
+ */
+export function isQuotaError(body: unknown): boolean {
+  if (typeof body !== 'object' || body === null) return false;
+  const err = (body as Record<string, unknown>).error;
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as Record<string, unknown>;
+  if (e.status === 'RESOURCE_EXHAUSTED') return true;
+  return typeof e.message === 'string' && /quota/i.test(e.message);
+}
+
 export function isApiKeyInvalid(status: number, body: unknown): boolean {
   if (status === 401 || status === 403) return true;
   if (status === 400 && typeof body === 'object' && body !== null) {

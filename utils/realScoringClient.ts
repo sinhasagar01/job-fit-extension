@@ -1,7 +1,7 @@
 import type { ScoringClient, FitResult } from './scorer';
 import { validateFitResult } from './scorer';
 import { ScoringError } from './scoringError';
-import { buildPrompt, apiDetail, isApiKeyInvalid } from './scoringUtils';
+import { buildPrompt, apiDetail, isApiKeyInvalid, isQuotaError } from './scoringUtils';
 
 const GEMINI_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -61,7 +61,7 @@ export function createRealScoringClient(apiKey: string, temperature = 0.1): Scor
         if (response.status === 429) {
           throw new ScoringError(`Rate limit reached. Please wait a moment and try again.${detail}`, {
             status: 429,
-            retriable: true,
+            retriable: !isQuotaError(body), // exhausted quota won't clear mid-run → fail fast
           });
         }
         throw new ScoringError(`Scoring failed (HTTP ${response.status}). Please try again.${detail}`, {
