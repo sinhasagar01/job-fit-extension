@@ -25,6 +25,7 @@ export default function App() {
   const [linkedInFileName, setLinkedInFileName] = useState('');
   const [jd, setJd] = useState<Jd | null>(null);
   const [jdLoading, setJdLoading] = useState(false);
+  const [jdError, setJdError] = useState<string | null>(null);
   const [pastedJd, setPastedJd] = useState('');
   const [fitResult, setFitResult] = useState<FitResult | null>(null);
   const [scoring, setScoring] = useState(false);
@@ -55,9 +56,10 @@ export default function App() {
   const runJdExtraction = useCallback(async () => {
     setJdLoading(true);
     setJd(null);
+    setJdError(null);
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id) throw new Error('no tab');
+      if (!tab?.id) throw new Error('No active tab found.');
       const results = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: extractJd });
       const r = results[0]?.result ?? null;
       let hostname: string | null = null;
@@ -67,8 +69,12 @@ export default function App() {
         hostname = null;
       }
       setJd(r ? { ...r, hostname } : null);
-    } catch {
+    } catch (err) {
+      // Most common cause: no activeTab grant for this tab (the panel persists
+      // across navigation, but activeTab is only granted for the tab active
+      // when the toolbar icon was clicked). Surface it instead of hiding it.
       setJd(null);
+      setJdError(err instanceof Error ? err.message : String(err));
     } finally {
       setJdLoading(false);
     }
@@ -77,6 +83,18 @@ export default function App() {
   useEffect(() => {
     if (state === 'needs-resume' || state === 'ready') runJdExtraction();
   }, [state, runJdExtraction]);
+
+  // The background pings us after each toolbar-icon click (which just re-granted
+  // activeTab for the current tab) so we re-read whatever page is now active.
+  useEffect(() => {
+    const onMessage = (msg: unknown) => {
+      if (typeof msg === 'object' && msg !== null && (msg as { type?: unknown }).type === 'jobfit:reextract') {
+        runJdExtraction();
+      }
+    };
+    browser.runtime.onMessage.addListener(onMessage);
+    return () => browser.runtime.onMessage.removeListener(onMessage);
+  }, [runJdExtraction]);
 
   async function handleResumeDone(fileName: string) {
     const { resumeText = '', linkedInText = '' } = await browser.storage.local.get(['resumeText', 'linkedInText']);
@@ -170,6 +188,7 @@ export default function App() {
             onLinkedInRemove={handleLinkedInRemove}
             jd={jd}
             jdLoading={jdLoading}
+            jdError={jdError}
             onRetryJd={runJdExtraction}
             pastedJd={pastedJd}
             onJdPaste={setPastedJd}

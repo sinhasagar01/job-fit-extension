@@ -12,6 +12,7 @@ interface Props {
   onLinkedInRemove: () => void;
   jd: Jd | null;
   jdLoading: boolean;
+  jdError: string | null;
   onRetryJd: () => void;
   pastedJd: string;
   onJdPaste: (text: string) => void;
@@ -38,7 +39,7 @@ function ResumeRow({ fileName, meta, onRemove }: { fileName: string; meta: strin
 }
 
 export default function Ready(props: Props) {
-  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, onRetryJd, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
+  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, onRetryJd, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
   const exhausted = checksRemaining <= 0;
   const hasJd = jd !== null || pastedJd.trim().length >= 20;
 
@@ -61,6 +62,11 @@ export default function Ready(props: Props) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
               Read this page again
             </button>
+            {import.meta.env.DEV && jdError && (
+              <div className="mt-2 rounded-md bg-white/60 p-2 font-mono text-[10px] leading-snug text-ink-faint">
+                {jdError}
+              </div>
+            )}
           </div>
         )}
 
