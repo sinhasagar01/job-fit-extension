@@ -39,6 +39,7 @@ const baseProps = {
   scoring: false,
   scoreError: null,
   checksRemaining: 5,
+  hasUserKey: false,
 };
 
 /**

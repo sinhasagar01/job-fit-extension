@@ -4,12 +4,13 @@ import NeedsResume from './views/NeedsResume';
 import Ready from './views/Ready';
 import Results from './views/Results';
 import Skeleton from './views/Skeleton';
+import FreeTierExhausted from './views/FreeTierExhausted';
 import { extractJd } from '../../utils/extractJd';
-import { mockScoringClient } from '../../utils/mockScoringClient';
-import { createRealScoringClient } from '../../utils/realScoringClient';
-import { createOpenAICompatClient } from '../../utils/openaiCompatScoringClient';
 import type { FitResult } from '../../utils/scorer';
 import { attemptScoredFit } from '../../utils/runScoredFit';
+import { selectScoringClient, hasUserKey, decrementForConfig } from '../../utils/selectScoringClient';
+import { getInstallToken } from '../../utils/installToken';
+import { ScoringError } from '../../utils/scoringError';
 import { cacheKey } from '../../utils/resultCache';
 import { getRemainingChecks, decrementCheck } from '../../utils/usageCounter';
 import type { Jd } from './types';
@@ -20,7 +21,7 @@ function openTracker(key?: string) {
   browser.tabs.create({ url: key ? `${base}?key=${encodeURIComponent(key)}` : base });
 }
 
-type PanelState = 'loading' | 'needs-resume' | 'ready' | 'showing-results';
+type PanelState = 'loading' | 'needs-resume' | 'ready' | 'showing-results' | 'free-tier-exhausted';
 
 function mergeProfileText(resumeText: string, linkedInText: string): string {
   return [resumeText, linkedInText].filter(Boolean).join('\n\n');
@@ -40,6 +41,10 @@ export default function App() {
   const [fitContext, setFitContext] = useState<{ title: string | null; company: string | null } | null>(null);
   const [checksRemaining, setChecksRemaining] = useState(5);
   const [detailKey, setDetailKey] = useState<string | null>(null); // cache key of the shown result
+  // BYOK: a user with their own key scores direct (never the Worker) and is
+  // uncapped — the free-check limiter is a hosted-tier cost control only, so it
+  // (and the check count) is hidden for them.
+  const [hasKey, setHasKey] = useState(false);
 
 
 
@@ -58,11 +63,17 @@ export default function App() {
 
   useEffect(() => {
     Promise.all([
-      browser.storage.local.get(['resumeText', 'resumeFileName', 'linkedInFileName']),
+      browser.storage.local.get(['resumeText', 'resumeFileName', 'linkedInFileName', 'fitProviderApiKey', 'geminiApiKey']),
       getRemainingChecks(),
     ])
       .then(([result, remaining]) => {
         setChecksRemaining(remaining);
+        setHasKey(
+          hasUserKey({
+            fitProviderApiKey: result.fitProviderApiKey as string | undefined,
+            geminiApiKey: result.geminiApiKey as string | undefined,
+          }),
+        );
         if (result.resumeText) {
           setResumeFileName((result.resumeFileName as string) ?? '');
           setLinkedInFileName((result.linkedInFileName as string) ?? '');
@@ -72,6 +83,29 @@ export default function App() {
         }
       })
       .catch(() => setState('needs-resume'));
+  }, []);
+
+  // Keep BYOK detection live if the user sets/clears their key in Options while
+  // the panel is open (so the check count appears/disappears without a reopen).
+  useEffect(() => {
+    const onChanged = (
+      changes: Record<string, unknown>,
+      area: string,
+    ) => {
+      if (area !== 'local') return;
+      if ('fitProviderApiKey' in changes || 'geminiApiKey' in changes) {
+        browser.storage.local.get(['fitProviderApiKey', 'geminiApiKey']).then((r) =>
+          setHasKey(
+            hasUserKey({
+              fitProviderApiKey: r.fitProviderApiKey as string | undefined,
+              geminiApiKey: r.geminiApiKey as string | undefined,
+            }),
+          ),
+        );
+      }
+    };
+    browser.storage.onChanged.addListener(onChanged);
+    return () => browser.storage.onChanged.removeListener(onChanged);
   }, []);
 
   // Read the job from the active tab. Runs in both pre-score states so the
@@ -188,41 +222,51 @@ export default function App() {
   }
 
   async function handleFit() {
-    const { profileText = '', fitProvider, fitProviderModel, fitProviderApiKey, geminiApiKey } =
-      await browser.storage.local.get(['profileText', 'fitProvider', 'fitProviderModel', 'fitProviderApiKey', 'geminiApiKey']);
+    const stored = await browser.storage.local.get([
+      'profileText', 'fitProvider', 'fitProviderModel', 'fitProviderApiKey', 'geminiApiKey',
+    ]);
+    const profileText = (stored.profileText as string) ?? '';
     const jdText = jd?.text ?? pastedJd;
     const title = jd?.title ?? null;
     const company = jd?.company ?? null;
     setFitContext({ title, company });
     setScoring(true);
     setScoreError(null);
-    const apiKey = fitProviderApiKey as string | undefined;
-    const provider = fitProvider as string | undefined;
-    const model = (fitProviderModel as string | undefined) || 'llama-3.3-70b-versatile';
-    const getClient = () =>
-      apiKey && provider === 'groq'
-        ? createOpenAICompatClient({ baseUrl: 'https://api.groq.com/openai/v1', model, apiKey })
-        : apiKey && provider === 'gemini'
-          ? createRealScoringClient(apiKey)
-          : geminiApiKey
-            ? createRealScoringClient(geminiApiKey as string)
-            : mockScoringClient;
+
+    const cfg = {
+      fitProvider: stored.fitProvider as string | undefined,
+      fitProviderModel: stored.fitProviderModel as string | undefined,
+      fitProviderApiKey: stored.fitProviderApiKey as string | undefined,
+      geminiApiKey: stored.geminiApiKey as string | undefined,
+    };
+    const byok = hasUserKey(cfg);
+    // Precedence: user key → their provider direct; no key → hosted Worker.
+    const token = byok ? '' : await getInstallToken();
+    const getClient = selectScoringClient(cfg, token);
+    // BYOK is uncapped → the real decrementCheck is never called for them.
+    const decrement = decrementForConfig(cfg, decrementCheck);
     try {
       // Blocked when stale → no scoreFit, no decrement, no wrong-page result.
-      const outcome = await attemptScoredFit(stale, getClient, profileText as string, jdText, { title, company }, decrementCheck);
+      const outcome = await attemptScoredFit(stale, getClient, profileText, jdText, { title, company }, decrement);
       if (!outcome) return;
-      setChecksRemaining(outcome.remaining);
+      if (!byok) setChecksRemaining(outcome.remaining); // BYOK: count is hidden, don't track
       setFitResult(outcome.result);
-      setDetailKey(cacheKey(profileText as string, jdText));
+      setDetailKey(cacheKey(profileText, jdText));
       setState('showing-results');
     } catch (err) {
-      setScoreError(err instanceof Error ? err.message : 'Scoring failed. Please try again.');
+      // Worker's free_tier_exhausted is a calm state, not an error toast.
+      if (err instanceof ScoringError && err.reason === 'free_tier_exhausted') {
+        setState('free-tier-exhausted');
+      } else {
+        setScoreError(err instanceof Error ? err.message : 'Scoring failed. Please try again.');
+      }
     } finally {
       setScoring(false);
     }
   }
 
-  const showChecks = state !== 'loading' && state !== 'needs-resume';
+  // BYOK users are uncapped, so they never see a free-check count.
+  const showChecks = state !== 'loading' && state !== 'needs-resume' && !hasKey;
 
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">
@@ -265,6 +309,12 @@ export default function App() {
             scoring={scoring}
             scoreError={scoreError}
             checksRemaining={checksRemaining}
+            hasUserKey={hasKey}
+          />
+        ) : state === 'free-tier-exhausted' ? (
+          <FreeTierExhausted
+            onUseOwnKey={() => browser.runtime.openOptionsPage()}
+            onBack={() => setState('ready')}
           />
         ) : state === 'showing-results' && fitResult ? (
           <Results

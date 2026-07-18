@@ -26,6 +26,7 @@ interface Props {
   scoring: boolean;
   scoreError: string | null;
   checksRemaining: number;
+  hasUserKey: boolean;
 }
 
 function ResumeRow({ fileName, meta, onRemove }: { fileName: string; meta: string; onRemove: () => void }) {
@@ -46,8 +47,9 @@ function ResumeRow({ fileName, meta, onRemove }: { fileName: string; meta: strin
 }
 
 export default function Ready(props: Props) {
-  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, stale, scoreAnyway, onScoreAnyway, onRetryJd, onPastChecks, pastedJd, onJdPaste, scoring, scoreError, checksRemaining } = props;
-  const exhausted = checksRemaining <= 0;
+  const { fileName, onDone, onRemove, linkedInFileName, onLinkedInDone, onLinkedInRemove, jd, jdLoading, jdError, stale, scoreAnyway, onScoreAnyway, onRetryJd, onPastChecks, pastedJd, onJdPaste, scoring, scoreError, checksRemaining, hasUserKey } = props;
+  // BYOK users are uncapped — the free-check limiter only applies to hosted scoring.
+  const exhausted = !hasUserKey && checksRemaining <= 0;
   const hasJd = jd !== null || pastedJd.trim().length >= 20;
   const uncertain = jd?.uncertain ?? false;
   const needsConfirm = uncertain && !scoreAnyway;
@@ -144,7 +146,9 @@ export default function Ready(props: Props) {
                 : needsConfirm
                   ? 'Confirm above to score this page'
                   : hasJd
-                    ? `${checksRemaining} of 5 free checks remaining today`
+                    ? hasUserKey
+                      ? 'Scoring with your own key'
+                      : `${checksRemaining} of 5 free checks remaining today`
                     : 'Paste at least a paragraph to score'}
           </div>
         </div>
