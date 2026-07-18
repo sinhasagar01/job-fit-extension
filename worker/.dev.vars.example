@@ -1,0 +1,5 @@
+# Copy this file to worker/.dev.vars (gitignored) and paste your real key so
+# `wrangler dev` can call OpenAI locally. NEVER commit the real value.
+# Production does not use this file — the key is set with:
+#   npx wrangler secret put OPENAI_API_KEY
+OPENAI_API_KEY=

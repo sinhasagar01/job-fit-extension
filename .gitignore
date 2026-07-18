@@ -23,6 +23,11 @@ eval/baselines/mock.json
 # Quarantined invalid baselines (complete:false runs) — never commit these
 eval/baselines/.incomplete/
 
+# Cloudflare Worker — local state, secrets, build output
+worker/.wrangler/
+worker/.dev.vars
+worker/dist/
+
 # Local-only docs (not part of the tracked project)
 ARCHITECTURE.md
 AGENTS.md
@@ -38,3 +43,4 @@ JobFit-KEY-FACTS.md
 *.njsproj
 *.sln
 *.sw?
+worker/.dev.vars

@@ -1,0 +1,30 @@
+name = "jobfit-score-worker"
+main = "src/index.ts"
+compatibility_date = "2025-09-06"   # max the installed workerd (wrangler 4.35) supports; bump when you upgrade wrangler
+
+# --- KV: rate-limit counters { token, date, count } ---
+# Fill id / preview_id from:
+#   npx wrangler kv namespace create RATE_LIMIT
+#   npx wrangler kv namespace create RATE_LIMIT --preview
+# These IDs address a namespace, not its contents — NOT secrets, safe to commit.
+# Local `wrangler dev` and the vitest workers pool simulate KV locally and do not
+# need real IDs; the IDs matter only for deploy against your account.
+[[kv_namespaces]]
+binding = "RATE_LIMIT"              # -> env.RATE_LIMIT
+id = "5f9b9b9518034cc091721ad6675a0aba"
+preview_id = "f8d68ecea9324d8384f0857c738bba7e"
+
+# --- Non-secret config only. OPENAI_API_KEY is a SECRET: never here.
+#     Local: worker/.dev.vars (gitignored).  Prod: `wrangler secret put OPENAI_API_KEY`.
+[vars]
+OPENAI_MODEL = "gpt-4o-mini"
+MAX_BODY_BYTES = "20000"
+DAILY_LIMIT_PER_TOKEN = "5"
+
+# GLOBAL_DAILY_CAP is bounded by the Cloudflare free-plan KV write limit
+# (~1,000 writes/day), NOT the dollar budget: every scored request writes a
+# counter, so the cap must sit well under that ceiling or the counter writes
+# throttle exactly when the cap should fire cleanly. Raising it means either
+# counter-write batching or a paid KV plan — revisit at Wave 7. 200/day is ample
+# headroom at current scale and keeps infra at $0.
+GLOBAL_DAILY_CAP = "200"

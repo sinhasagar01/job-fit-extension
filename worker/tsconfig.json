@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "lib": ["es2022"],
+    // workers-types = the workerd runtime globals; vitest-pool-workers ships the
+    // `cloudflare:test` module declaration (SELF, env, createExecutionContext…).
+    // Neither pulls in lib.dom — `lib` stays es2022.
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"]
+}
