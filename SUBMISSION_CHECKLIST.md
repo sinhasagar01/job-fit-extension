@@ -46,7 +46,7 @@ Paste these verbatim into the "Permission justification" fields on the Chrome We
 
 ### `storage`
 
-> JobFit stores the user's resume text, optional LinkedIn profile text, chosen AI provider, API key, and daily usage counter in `chrome.storage.local`. All data remains on the user's device. No remote server or cloud database is used. Users can clear all stored data at any time via the extension UI.
+> JobFit stores the user's resume text, optional LinkedIn profile text, chosen AI provider, API key, daily usage counter, and an anonymous install identifier in `chrome.storage.local` — all on the user's device; nothing in this storage is a remote database. (Free-tier scoring itself is handled by a JobFit server — see the Worker host permission below.) Users can clear all stored data at any time via the extension UI.
 
 ### `activeTab`
 
@@ -64,6 +64,10 @@ Paste these verbatim into the "Permission justification" fields on the Chrome We
 
 > When the user selects Groq as their AI provider and clicks "Am I Fit?", JobFit sends the scoring request directly from the browser to the Groq API endpoint using the user's own API key. This host permission is required to make that cross-origin request. It is only exercised when the user explicitly triggers a score and has configured Groq.
 
+### Host permission: `https://jobfit-score-worker.sinhasagar.workers.dev/*`
+
+> On the free tier (when the user has NOT added their own API key), clicking "Am I Fit?" sends the scoring request — the user's resume text and the job description — to JobFit's scoring server at this origin, which forwards it to the AI provider (OpenAI) and returns the result. The server does not store or log the resume or job-description text; it keeps only anonymous per-install and per-IP daily counters (the IP hashed) to enforce the free limit. This host permission is required to make that cross-origin request, and is exercised only when a keyless user explicitly triggers a score. Users who add their own key bypass this server entirely — their request goes directly to Gemini or Groq.
+
 ---
 
 ## Privacy & data handling declaration (for the store form)
@@ -72,17 +76,21 @@ When the store form asks about data collection, select/declare:
 
 | Data type | Collected? | Notes |
 |-----------|-----------|-------|
-| Personally identifiable information | No | Resume text is processed locally; not collected by the developer |
+| Personally identifiable information | **Yes** | On free checks, résumé text (which may contain personal information) is sent to JobFit's scoring server and on to OpenAI to produce the score — processed, not stored. With the user's own key it goes directly to their provider, not to us. |
 | Health info | No | |
 | Financial info | No | |
-| Authentication info | No | API keys are stored locally, not on developer servers |
+| Authentication info | No | API keys are stored locally and sent only to the user's chosen provider, never to JobFit's server. The anonymous install identifier sent on free checks is a random rate-limiting ID — it **authenticates nothing, grants no access, and identifies no one**; it is not a credential and maps to no account. |
 | Personal communications | No | |
 | Location | No | |
 | Web history | No | |
 | User activity | No | |
-| Website content | No | Job description text is read locally and sent only to the user's chosen AI provider |
+| Website content | **Yes** | On free checks, the job-description text is sent to JobFit's scoring server and on to OpenAI — processed, not stored. With the user's own key it goes directly to their provider. |
 
-Check **"This extension does not collect any user data"** if that option is available, and note that data is processed locally and sent to the user-configured third-party AI provider.
+Do **not** select "This extension does not collect any user data." On the free tier JobFit transmits résumé and job-description text to its scoring server and to OpenAI to produce the score, though it stores none of it. On the store form:
+
+- **Data collection** — declare that résumé text and job-description text are **collected** for the free-tier scoring feature (processed to produce the score, not stored).
+- **Third-party sharing/transfer** — answer **Yes: shared with OpenAI**, which acts as a **service provider / processor** that performs the scoring on JobFit's behalf. The data is **not sold**, **not transferred for any purpose beyond producing the score**, and **not used for tracking or advertising**. ("We don't share your data" is no longer true and must not be claimed.)
+- Users who add their own key route their data **directly to their chosen provider** (Gemini or Groq), not through JobFit.
 
 ---
 

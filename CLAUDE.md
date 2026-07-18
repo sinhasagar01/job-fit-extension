@@ -70,11 +70,11 @@ The extension is **JobFit ("Am I Fit?")** — a job-fit scorer that opens as a C
 
 ### Storage
 
-All state lives in `chrome.storage.local` (no backend for MVP): resume text, usage counter + last-reset date, last result per tab URL.
+Device state lives in `chrome.storage.local`: resume text, usage counter + last-reset date, last result per tab URL, and an anonymous install token. Free-tier scoring runs through a hosted Cloudflare Worker (`worker/`); saved results and the résumé stay on-device.
 
 ### AI calls
 
-**Never bundle an API key in the extension.** For MVP, the user enters their own key in an options page; it is stored in `chrome.storage.local`. The scoring client must be behind an interface so mock and real implementations are interchangeable.
+**Never bundle an API key in the extension.** Two scoring paths: the hosted free tier is a Cloudflare Worker (`worker/`) that holds the OpenAI key in its own env (never in the extension bundle); BYOK users enter their own Gemini/Groq key, stored in `chrome.storage.local` and sent straight to their provider. The scoring client is behind an interface (`selectScoringClient`) so hosted / real / mock implementations are interchangeable.
 
 ### Permissions
 

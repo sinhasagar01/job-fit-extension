@@ -22,6 +22,7 @@ interface Props {
   stale: boolean;
   onBack: () => void;
   onOpenDetail: () => void;
+  hasUserKey: boolean;
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -30,7 +31,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Plan' },
 ];
 
-export default function Results({ result, title, company, stale, onBack, onOpenDetail }: Props) {
+export default function Results({ result, title, company, stale, onBack, onOpenDetail, hasUserKey }: Props) {
   const [tab, setTab] = useState<Tab>('verdict');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -111,6 +112,7 @@ export default function Results({ result, title, company, stale, onBack, onOpenD
       </div>
 
       <PanelFooter
+        hasUserKey={hasUserKey}
         left={
           <button
             type="button"

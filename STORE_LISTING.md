@@ -13,16 +13,16 @@ JobFit — Am I Fit?
 ## Short description (132-character max)
 
 ```
-Score your resume against any job in one click — your data never leaves your device.
+Score your resume against any job in one click. Free to start, or bring your own AI key for private, direct scoring.
 ```
 
-Character count: 84 ✓
+Character count: 115 ✓ (132 max)
 
 ---
 
 ## Full description
 
-Your resume never leaves your device except to the AI you chose.
+Two ways to score — a free check through our server that keeps none of your content, or your own AI key for scoring that goes straight from your browser to the provider.
 
 **JobFit scores how well your resume fits a job posting — in one click, right from your browser toolbar.**
 
@@ -37,11 +37,15 @@ Open any job listing, click the JobFit icon, and within seconds you get:
 
 ---
 
-### Privacy first, by design
+### Privacy, honestly
 
-JobFit has no servers. When you click "Am I Fit?", your resume text and the job description go directly from your browser to the AI provider you selected — Google Gemini or Groq. There is no intermediary. The extension developer receives nothing.
+Two ways to score, and they handle your data differently:
 
-**No account required.** Connect a free API key from Google AI Studio or Groq (both offer free tiers; links are in the extension's Settings page), and all scoring goes straight from your browser to that API. Your resume, your job descriptions, and your API key never pass through our infrastructure, because we have no infrastructure.
+**Free checks.** Your resume and the job description go to JobFit's scoring server, which passes them to our AI provider (OpenAI) and returns the result. We keep **none of your content** — it's processed and dropped, never stored by us or written to a log. To run the free daily limit we keep only anonymous usage counters (one per install, one per IP with the IP hashed), never your content. OpenAI processes the request under [its API data policy](https://developers.openai.com/api/docs/guides/your-data) and states it does not train on API inputs by default.
+
+**Your own key.** Add a free Google Gemini or Groq API key in Settings (both offer free tiers; links are on the Settings page) and scoring goes **straight from your browser to that provider** — it never touches JobFit's server, and your key never leaves your device except to the provider you chose.
+
+Either way, JobFit never stores your resume anywhere but your own device, and we never sell your data or train on it.
 
 ---
 

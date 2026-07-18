@@ -12,15 +12,16 @@ interface Props {
   linkedInFileName: string;
   onLinkedInDone: (fileName: string, text: string) => void;
   onLinkedInRemove: () => void;
+  hasUserKey: boolean;
 }
 
 const PRIVACY = [
-  'The PDF is read in your browser. It is never uploaded to us.',
-  "No account. Nothing stored on a server. There isn't one.",
+  'Your résumé PDF is read on your device and stored only there.',
+  'No account. Free checks keep none of your content on our server; your own key scores straight from your browser.',
   'Remove it any time and the text goes with it.',
 ];
 
-export default function NeedsResume({ jd, jdLoading, onDone, linkedInFileName, onLinkedInDone, onLinkedInRemove }: Props) {
+export default function NeedsResume({ jd, jdLoading, onDone, linkedInFileName, onLinkedInDone, onLinkedInRemove, hasUserKey }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'parsing' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -89,7 +90,7 @@ export default function NeedsResume({ jd, jdLoading, onDone, linkedInFileName, o
         </div>
       </div>
 
-      <PanelFooter left={<span className="text-[12.5px] text-ink-faint">Step 1 of 2</span>} />
+      <PanelFooter hasUserKey={hasUserKey} left={<span className="text-[12.5px] text-ink-faint">Step 1 of 2</span>} />
     </>
   );
 }

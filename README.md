@@ -2,7 +2,7 @@
 
 **Know in seconds whether a job is worth applying to.**
 
-JobFit is a Chrome extension that compares your resume against any job posting and returns an instant fit score with a five-dimension breakdown and a concrete action plan — all without your resume ever leaving your device.
+JobFit is a Chrome extension that compares your resume against any job posting and returns an instant fit score with a five-dimension breakdown and a concrete action plan — in one click, right from your browser toolbar.
 
 [**Add to Chrome →**](https://chromewebstore.google.com/detail/JobFit/lghnjblnkagdmfhemmdocnicficmniak) · [Landing page](https://sinhasagar01.github.io/job-fit-extension/)
 ![JobFit open beside a job posting](docs/assets/hero.png)
@@ -17,7 +17,7 @@ JobFit is a Chrome extension that compares your resume against any job posting a
 - **Actionable gap-closing plan** — specific steps drawn from the actual posting and your actual resume
 - **Every check kept** — past checks are saved on your device; re-checking the same job is instant, free, and returns the same answer
 - **Works anywhere** — native extraction on LinkedIn, Greenhouse, Lever, and Ashby, with structured-data and title-parse fallbacks; paste-fallback for every other job site
-- **Local-first privacy** — your resume is parsed on-device and stored only in `chrome.storage.local`; it is never sent to any server the developer controls
+- **Private by design** — your resume is parsed and stored on your device; free checks go through JobFit's server (which keeps none of your content and never logs it), or add your own key and scoring goes straight from your browser to the provider — never our server
 - **Bring your own key** — connect Google Gemini or Groq with your own API key; no subscription, no middleman
 
 ---
@@ -84,13 +84,14 @@ The side panel is the only UI surface. Clicking the toolbar icon fires `action.o
 
 ## Privacy
 
-JobFit is local-first by design:
+Two ways to score, handled differently:
 
 - Your resume text is stored in `chrome.storage.local` — a private, per-extension store on your machine
 - Job description extraction happens entirely in your browser, and only when you click the icon — never in the background or on page load
 - Saved checks (scores, breakdowns, plans, job titles) are stored on your device and never transmitted
-- The **only** outbound request is the scoring call, which goes directly from your browser to your chosen AI provider using your own API key
-- The extension developer receives no data, no telemetry, and no API traffic
+- **Free checks** go to JobFit's scoring server, which passes your resume and the job text to our AI provider (OpenAI) and returns the result — we keep **none of your content** (processed and dropped, never stored or logged); only anonymous per-install and per-IP counters (the IP hashed) run the daily limit
+- **With your own key**, the scoring call goes straight from your browser to your chosen provider (Gemini or Groq) and never touches our server
+- Either way, JobFit never stores your resume anywhere but your device, and we never sell your data or train on it
 
 Full details: [Privacy policy](https://gist.github.com/sinhasagar01/d1a69bd31c727e7a3db9c4461db6d3cb)
 

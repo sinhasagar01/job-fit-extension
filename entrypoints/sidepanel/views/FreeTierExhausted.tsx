@@ -20,8 +20,7 @@ export default function FreeTierExhausted({ onUseOwnKey, onBack }: Props) {
             Free scoring is at capacity
           </div>
           <div className="text-xs leading-[1.5] text-ink-soft">
-            Free checks are shared across everyone and they're used up for now. Two ways to keep going —
-            both keep your résumé private.
+            Free checks are shared across everyone, and they're used up for now. Here are two ways to keep going.
           </div>
         </div>
 
@@ -55,6 +54,7 @@ export default function FreeTierExhausted({ onUseOwnKey, onBack }: Props) {
       </div>
 
       <PanelFooter
+        hasUserKey={false}
         left={
           <button
             type="button"

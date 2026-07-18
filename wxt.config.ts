@@ -18,7 +18,7 @@ export default defineConfig({
         : [];
     return {
       name: 'JobFit',
-      version: '1.2.0',
+      version: '1.3.0',
       description: 'JobFit — instant resume-to-job fit scoring, right on the job page',
       permissions: ['storage', 'activeTab', 'scripting', 'sidePanel'],
       // Toolbar icon with no popup — clicking it opens the side panel (see background.ts).

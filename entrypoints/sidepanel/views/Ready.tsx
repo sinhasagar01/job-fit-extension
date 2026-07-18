@@ -155,6 +155,7 @@ export default function Ready(props: Props) {
       </div>
 
       <PanelFooter
+        hasUserKey={hasUserKey}
         left={
           <button
             type="button"

@@ -4,7 +4,7 @@ import type { Jd } from '../types';
 
 /** Shown while scoring (and on initial load): the found job stays visible and a
  *  skeleton stands in for the verdict card — never a blank panel. */
-export default function Skeleton({ jd, label }: { jd: Jd | null; label: string }) {
+export default function Skeleton({ jd, label, hasUserKey = false }: { jd: Jd | null; label: string; hasUserKey?: boolean }) {
   return (
     <>
       <div className="panel-scroll min-h-0 flex-1 overflow-y-auto">
@@ -30,7 +30,7 @@ export default function Skeleton({ jd, label }: { jd: Jd | null; label: string }
           </div>
         </div>
       </div>
-      <PanelFooter />
+      <PanelFooter hasUserKey={hasUserKey} />
     </>
   );
 }

@@ -5,7 +5,6 @@
 
 export const WORKER_ORIGIN_DEV = 'http://localhost:8787';
 
-// Set to the deployed origin (https://jobfit-score-worker.<subdomain>.workers.dev)
-// before shipping hosted scoring. Until it's a real https:// origin, prod builds
-// omit it from host_permissions and hosted scoring is inert in prod.
-export const WORKER_ORIGIN_PROD = '__FILL_ON_DEPLOY__';
+// The deployed Worker origin. host_permissions uses `${WORKER_ORIGIN_PROD}/*`,
+// i.e. this EXACT origin — not a *.workers.dev wildcard (narrowest grant).
+export const WORKER_ORIGIN_PROD = 'https://jobfit-score-worker.sinhasagar.workers.dev';

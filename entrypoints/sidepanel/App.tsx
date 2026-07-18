@@ -276,7 +276,7 @@ export default function App() {
       />
       <div className="flex min-h-0 flex-1 flex-col">
         {scoring ? (
-          <Skeleton jd={jd} label="Scoring your fit…" />
+          <Skeleton jd={jd} label="Scoring your fit…" hasUserKey={hasKey} />
         ) : state === 'loading' ? (
           <Skeleton jd={null} label="Loading…" />
         ) : state === 'needs-resume' ? (
@@ -287,6 +287,7 @@ export default function App() {
             linkedInFileName={linkedInFileName}
             onLinkedInDone={handleLinkedInDone}
             onLinkedInRemove={handleLinkedInRemove}
+            hasUserKey={hasKey}
           />
         ) : state === 'ready' ? (
           <Ready
@@ -324,6 +325,7 @@ export default function App() {
             stale={stale}
             onBack={() => setState('ready')}
             onOpenDetail={() => openTracker(detailKey ?? undefined)}
+            hasUserKey={hasKey}
           />
         ) : null}
       </div>

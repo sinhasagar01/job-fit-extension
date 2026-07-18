@@ -66,14 +66,16 @@ payments/Stripe · backend server · cross-browser builds · model choice UI.
 
 - **Stack:** WXT + React + TypeScript + Tailwind CSS + Recharts.
   WXT file-based entrypoints; never hand-edit manifest.json (use wxt.config.ts).
-- **Storage:** everything in `chrome.storage.local` for MVP (resume text, usage
-  counter, last result per tab URL). No server, no accounts.
-- **AI calls (MVP):** mock client by default. Real client calls a free-tier LLM
-  API; the API key is entered by the user in an options page and stored locally
-  for MVP. (Post-MVP: replace with our serverless proxy so users never need a
-  key — REQUIRED before public launch; never ship our own key in the bundle.)
-- **Privacy stance:** resume never leaves the device except inside the scoring
-  API request. No analytics in MVP. State this in the store listing later.
+- **Storage:** device state in `chrome.storage.local` (resume text, usage
+  counter, last result per tab URL, anonymous install token). No accounts.
+- **AI calls:** two paths — the hosted free tier is a Cloudflare Worker
+  (`worker/`) that holds the OpenAI key in its env (Wave 4, shipped; never ship
+  a key in the bundle); or BYOK, where the user's Gemini/Groq key is stored
+  locally and sent straight to their provider.
+- **Privacy stance:** the résumé is stored only on-device. Free checks pass it
+  through our Worker to OpenAI, which keeps none of it (not stored, not logged);
+  BYOK scoring goes straight to the user's provider, never our server. No
+  analytics. See PRIVACY.md.
 - **Permissions:** request the minimum — `activeTab`, `storage`, `scripting`.
   Avoid broad host permissions if possible.
 

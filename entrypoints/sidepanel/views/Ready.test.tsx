@@ -98,3 +98,19 @@ describe('Ready — uncertain detection gates the primary path', () => {
     expect(amIFit()).toBeEnabled();
   });
 });
+
+describe('Ready — threads the scoring mode to the privacy badge', () => {
+  const readyProps = { ...baseProps, jd: uncertainJd, scoreAnyway: false, onScoreAnyway: () => {} };
+
+  it('hosted (no user key) shows "Processed, not stored"', () => {
+    render(<Ready {...readyProps} hasUserKey={false} />);
+    expect(screen.getByText(/processed, not stored/i)).toBeInTheDocument();
+    expect(screen.queryByText(/on your device/i)).not.toBeInTheDocument();
+  });
+
+  it('BYOK (user key) shows "On your device"', () => {
+    render(<Ready {...readyProps} hasUserKey={true} />);
+    expect(screen.getByText(/on your device/i)).toBeInTheDocument();
+    expect(screen.queryByText(/processed, not stored/i)).not.toBeInTheDocument();
+  });
+});
