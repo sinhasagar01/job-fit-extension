@@ -33,7 +33,18 @@ costs **you** money — every junk page anyone scores is billed to your OpenAI
 balance. Detection must be trustworthy before an endpoint you pay for sits
 behind it. **Do not start Wave 4 until 6.1 is green.**
 
-## Task 6.1 — Negative fixtures + a real "is this a job posting?" gate
+## Task 6.1 — Negative fixtures + a real "is this a job posting?" gate ✅
+
+> **Done.** Inline `looksLikeJobPosting()` gates the readability fallback in
+> `extractJd` (definitive JSON-LD JobPosting / strong ATS-host or job-ish URL /
+> ≥3 distinct job phrases; length alone never passes). Seven content-rich
+> negative fixtures (`test/fixtures/negative/`: YouTube, Gemini API docs, news,
+> blog, GitHub repo, marketing page, LinkedIn profile) all return null; a
+> plain-markup `phrase-only-job.html` (no JSON-LD, no job-ish URL) proves the
+> corroborating tier on the pass side. Every existing positive still extracts.
+> Two mutation checks pass: neuter the gate → all 7 negatives fail; neuter only
+> the phrase tier → the phrase-only positive fails. LinkedIn profile fired 0/9
+> phrases, so no re-scope of the phrase scan was needed. 127 tests green.
 
 **Root cause (verify before fixing).** `extractJd`'s fallback is "largest
 `<article>`/`<main>`/`<section>` ≥ 200 chars". Nearly every content page on the

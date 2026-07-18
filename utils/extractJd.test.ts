@@ -176,6 +176,54 @@ describe('extractJd — LinkedIn selector guard (synthetic, unverified vs live)'
 });
 
 // ---------------------------------------------------------------------------
+// The detection gate (Task 6.1). Content-rich pages that are NOT job postings
+// must return null (the old readability fallback grabbed any ≥200-char block),
+// and a posting whose only signal is job-phrase density — no JSON-LD, no
+// job-ish URL, no known selector — must still extract.
+// ---------------------------------------------------------------------------
+
+describe('extractJd — non-job pages are rejected (the detection gate)', () => {
+  // Each fixture is a real, content-rich page with well over 200 chars of
+  // <main>/<article> text — the readability fallback would happily grab it.
+  // The URLs carry no job-ish path, so only the gate stands between the page
+  // and a false positive.
+  const cases: [string, string][] = [
+    ['negative/youtube-watch.html', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+    ['negative/gemini-api-docs.html', 'https://ai.google.dev/gemini-api/docs'],
+    ['negative/news-article.html', 'https://www.nytimes.com/2026/07/01/technology/ai.html'],
+    ['negative/blog-post.html', 'https://overreacted.io/a-complete-guide-to-useeffect/'],
+    ['negative/github-repo.html', 'https://github.com/facebook/react'],
+    ['negative/marketing-page.html', 'https://linear.app/'],
+    // Highest-risk false positive: a LinkedIn profile. The /in/ URL fires no
+    // strong signal, and LinkedIn chrome carries job vocabulary — so only the
+    // phrase gate stands between it and a false detection on our most-used site.
+    ['negative/linkedin-profile.html', 'https://www.linkedin.com/in/example/'],
+  ];
+  for (const [file, url] of cases) {
+    it(`returns null for ${file} (content-rich, not a job posting)`, async () => {
+      const result = await extractJd(docFrom(file), url);
+      expect(result).toBeNull();
+    });
+  }
+});
+
+describe('extractJd — job posting detected via job-phrase density alone', () => {
+  it('extracts a plain-markup posting with no JSON-LD and no job-ish URL', async () => {
+    // /team/opportunities does not match the strong URL signal, and the page
+    // has no JSON-LD and no known ATS selector — so it clears the gate ONLY via
+    // the corroborating job-phrase tier. This is the positive coverage for that
+    // tier; without it the ≥3-phrase pass path is untested.
+    const result = await extractJd(
+      docFrom('phrase-only-job.html'),
+      'https://www.brightwave.example/team/opportunities'
+    );
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe('Backend Engineer');
+    expect(result!.text.length).toBeGreaterThanOrEqual(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Negative case: a genuinely JD-free page must return null, not a false match.
 // ---------------------------------------------------------------------------
 

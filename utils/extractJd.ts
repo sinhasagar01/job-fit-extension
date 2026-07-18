@@ -93,9 +93,13 @@ export async function extractJd(
   if (!title) title = doc.title.trim() || null;
 
   // --- company ---
-  // Prefer the employer from schema.org JobPosting JSON-LD — the reliable
-  // generic source (a hostname or Lever's location column are not the company).
-  const jsonLdCompany = (): string | null => {
+  // schema.org JSON-LD is the reliable generic source. One inline walker parses
+  // every ld+json block into its object nodes (handling arrays and @graph);
+  // both the employer lookup here and the job-posting gate further down reuse
+  // it, so the two can't drift. Inline per the executeScript serialization
+  // constraint (ARCHITECTURE.md Decision 4).
+  const jsonLdNodes = (): Array<Record<string, unknown>> => {
+    const out: Array<Record<string, unknown>> = [];
     for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
       let data: unknown;
       try {
@@ -106,14 +110,20 @@ export async function extractJd(
       const graph = (data as { '@graph'?: unknown })['@graph'];
       const nodes = Array.isArray(data) ? data : Array.isArray(graph) ? graph : [data];
       for (const node of nodes) {
-        const obj = node as { '@type'?: unknown; hiringOrganization?: unknown };
-        const type = obj['@type'];
-        const isJob = Array.isArray(type) ? type.includes('JobPosting') : type === 'JobPosting';
-        if (!isJob) continue;
-        const org = obj.hiringOrganization;
-        const name = typeof org === 'string' ? org : (org as { name?: unknown } | null)?.name;
-        if (typeof name === 'string' && name.trim()) return name.trim();
+        if (node && typeof node === 'object') out.push(node as Record<string, unknown>);
       }
+    }
+    return out;
+  };
+  const isJobPostingType = (type: unknown): boolean =>
+    Array.isArray(type) ? type.includes('JobPosting') : type === 'JobPosting';
+
+  const jsonLdCompany = (): string | null => {
+    for (const node of jsonLdNodes()) {
+      if (!isJobPostingType(node['@type'])) continue;
+      const org = node.hiringOrganization;
+      const name = typeof org === 'string' ? org : (org as { name?: unknown } | null)?.name;
+      if (typeof name === 'string' && name.trim()) return name.trim();
     }
     return null;
   };
@@ -190,6 +200,47 @@ export async function extractJd(
   }
 
   if (!text) {
+    // Detection gate (Task 6.1). The readability fallback below grabs the
+    // largest paragraph-dense block on ANY content-rich page — YouTube, API
+    // docs, news — so before trusting it, require a positive signal that this
+    // really is a job posting. Length alone is never sufficient. Definitive:
+    // schema.org JSON-LD JobPosting. Strong: a known ATS host or a job-ish URL
+    // path. Corroborating: ≥3 distinct job phrases in the page text. None of
+    // these → no JD, and the panel falls back to manual paste rather than
+    // guessing. Inline per the executeScript serialization constraint.
+    const looksLikeJobPosting = (): boolean => {
+      // Definitive.
+      if (jsonLdNodes().some((n) => isJobPostingType(n['@type']))) return true;
+      // Strong: known ATS host, or a job-ish URL path segment.
+      const host = url?.hostname ?? '';
+      const path = url?.pathname ?? '';
+      const atsHost =
+        /(^|\.)greenhouse\.io$/.test(host) ||
+        /(^|\.)lever\.co$/.test(host) ||
+        /(^|\.)ashbyhq\.com$/.test(host) ||
+        (/(^|\.)linkedin\.com$/.test(host) && /\/jobs\//.test(path));
+      if (atsHost) return true;
+      if (/\/(jobs?|careers?|vacanc\w*|openings?)(?:\/|$|\?|#)/i.test(path)) return true;
+      // Corroborating: distinct job-phrase density. Normalize curly apostrophes
+      // so "what you'll do" matches regardless of the page's typography.
+      const body = (doc.body?.textContent ?? '').toLowerCase().replace(/’/g, "'");
+      const phrases = [
+        'responsibilities',
+        'qualifications',
+        'requirements',
+        "what you'll do",
+        "what we're looking for",
+        'about the role',
+        'years of experience',
+        'apply now',
+        'benefits',
+      ];
+      let hits = 0;
+      for (const p of phrases) if (body.includes(p)) hits++;
+      return hits >= 3;
+    };
+    if (!looksLikeJobPosting()) return null;
+
     // Readability fallback. The original only considered <article>/<main>/
     // <section>; sites like YC render the JD in bare <div>s with no semantic
     // container. Naively picking the largest low-link block grabs the whole
