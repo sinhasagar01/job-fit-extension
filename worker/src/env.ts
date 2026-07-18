@@ -1,5 +1,5 @@
 /**
- * Worker environment bindings. Extended in Task 4.1 as the handler grows.
+ * Worker environment bindings.
  *
  * `OPENAI_API_KEY` is a SECRET — never in wrangler.toml `[vars]`. It is provided
  * by worker/.dev.vars locally and `wrangler secret put` in production. The rest
@@ -11,5 +11,6 @@ export interface Env {
   OPENAI_MODEL: string;
   MAX_BODY_BYTES: string;
   DAILY_LIMIT_PER_TOKEN: string;
+  DAILY_LIMIT_PER_IP: string;
   GLOBAL_DAILY_CAP: string;
 }

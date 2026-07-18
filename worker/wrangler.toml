@@ -20,6 +20,9 @@ preview_id = "f8d68ecea9324d8384f0857c738bba7e"
 OPENAI_MODEL = "gpt-4o-mini"
 MAX_BODY_BYTES = "20000"
 DAILY_LIMIT_PER_TOKEN = "5"
+# Per-IP daily ceiling — looser than per-token because one IP can front many
+# installs behind NAT. No-IP requests share a single 'noip' bucket (not a bypass).
+DAILY_LIMIT_PER_IP = "20"
 
 # GLOBAL_DAILY_CAP is bounded by the Cloudflare free-plan KV write limit
 # (~1,000 writes/day), NOT the dollar budget: every scored request writes a
