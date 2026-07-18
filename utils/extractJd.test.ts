@@ -207,6 +207,38 @@ describe('extractJd — non-job pages are rejected (the detection gate)', () => 
   }
 });
 
+describe('extractJd — the phrase scan is scoped to the candidate, not the whole page', () => {
+  // Proves the scope matters. chrome-heavy-nonjob.html carries ≥3 job phrases in
+  // its careers footer but ZERO in the article the readability pass selects. A
+  // whole-body count would accept it (false positive); scoping the scan to the
+  // candidate rejects it. If the scan ever regresses to whole-body, the second
+  // assertion flips — extractJd stops returning null — and this test fails.
+  const PHRASES = [
+    'responsibilities', 'qualifications', 'requirements', "what you'll do",
+    "what we're looking for", 'about the role', 'years of experience', 'apply now', 'benefits',
+  ];
+  const countPhrases = (t: string): number => {
+    const s = t.toLowerCase().replace(/’/g, "'");
+    return PHRASES.filter((p) => s.includes(p)).length;
+  };
+
+  it('the fixture is a real discriminator: footer ≥3 job phrases, article <3', () => {
+    const doc = docFrom('negative/chrome-heavy-nonjob.html');
+    // Whole-body would count enough to pass a naive gate…
+    expect(countPhrases(doc.body?.textContent ?? '')).toBeGreaterThanOrEqual(3);
+    // …but the block that would actually be extracted has none.
+    expect(countPhrases(doc.querySelector('article')?.textContent ?? '')).toBeLessThan(3);
+  });
+
+  it('extractJd rejects it — only the candidate-scoped scan returns null here', async () => {
+    const result = await extractJd(
+      docFrom('negative/chrome-heavy-nonjob.html'),
+      'https://theslowloaf.example/sourdough-starters'
+    );
+    expect(result).toBeNull();
+  });
+});
+
 describe('extractJd — job posting detected via job-phrase density alone', () => {
   it('extracts a plain-markup posting with no JSON-LD and no job-ish URL', async () => {
     // /team/opportunities does not match the strong URL signal, and the page

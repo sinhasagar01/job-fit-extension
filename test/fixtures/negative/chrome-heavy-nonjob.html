@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>A Field Guide to Sourdough Starters — The Slow Loaf</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">The Slow Loaf</a> ·
+      <a href="/recipes">Recipes</a> ·
+      <a href="/about">About</a> ·
+      <a href="/careers">Careers</a>
+    </nav>
+  </header>
+
+  <!-- Synthetic guard for Task 6.1's candidate-scoped phrase scan. The MAIN
+       article is a non-job blog post containing ZERO job phrases. The FOOTER
+       chrome (a careers teaser) carries FOUR distinct job phrases. A whole-page
+       phrase count would read >=3 and mis-detect this as a job posting; a scan
+       scoped to the readability candidate (the article) counts zero and
+       correctly rejects it. This fixture only returns null under candidate
+       scoping — flip the scan back to whole-body and it becomes a false
+       positive. -->
+  <main>
+    <article>
+      <h1>A Field Guide to Sourdough Starters</h1>
+      <p>A sourdough starter is a living culture of wild yeast and lactic acid bacteria that you keep alive by feeding it flour and water. The first few days are the most confusing, because the culture goes through a false rise driven by bacteria that later die back before the yeast you actually want takes over. Patience through that lull is the single biggest predictor of success.</p>
+      <p>Feed the starter on a regular schedule, discarding most of it and replenishing with equal weights of flour and water. Warmth matters more than most people expect: a culture kept near twenty-six degrees will mature in roughly half the time of one left on a cold counter. If your kitchen runs cold, a turned-off oven with the light on makes a reliable proofing box.</p>
+      <p>Once the starter doubles predictably within four to six hours of a feed, it is ready to leaven bread. Test it by dropping a spoonful into water; a ripe starter floats. From there the variables are hydration, salt, and time, and the rest of this guide walks through each of them with a base recipe you can adapt to whatever flour you have on hand.</p>
+    </article>
+  </main>
+
+  <footer>
+    <h3>Join the bakery</h3>
+    <p>We are always hiring bakers.</p>
+    <ul>
+      <li><a href="/careers/responsibilities">Responsibilities</a></li>
+      <li><a href="/careers/qualifications">Qualifications</a></li>
+      <li><a href="/careers/benefits">Benefits</a></li>
+      <li><a href="/careers/apply">Apply now</a></li>
+    </ul>
+  </footer>
+</body>
+</html>

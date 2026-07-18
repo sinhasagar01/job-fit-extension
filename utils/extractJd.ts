@@ -205,10 +205,11 @@ export async function extractJd(
     // docs, news — so before trusting it, require a positive signal that this
     // really is a job posting. Length alone is never sufficient. Definitive:
     // schema.org JSON-LD JobPosting. Strong: a known ATS host or a job-ish URL
-    // path. Corroborating: ≥3 distinct job phrases in the page text. None of
-    // these → no JD, and the panel falls back to manual paste rather than
-    // guessing. Inline per the executeScript serialization constraint.
-    const looksLikeJobPosting = (): boolean => {
+    // path. Corroborating: ≥3 distinct job phrases inside the chosen candidate
+    // block (not page-wide). None of these → no JD, and the panel falls back to
+    // manual paste rather than guessing. Inline per the executeScript
+    // serialization constraint.
+    const looksLikeJobPosting = (candidate: Element): boolean => {
       // Definitive.
       if (jsonLdNodes().some((n) => isJobPostingType(n['@type']))) return true;
       // Strong: known ATS host, or a job-ish URL path segment.
@@ -221,9 +222,13 @@ export async function extractJd(
         (/(^|\.)linkedin\.com$/.test(host) && /\/jobs\//.test(path));
       if (atsHost) return true;
       if (/\/(jobs?|careers?|vacanc\w*|openings?)(?:\/|$|\?|#)/i.test(path)) return true;
-      // Corroborating: distinct job-phrase density. Normalize curly apostrophes
-      // so "what you'll do" matches regardless of the page's typography.
-      const body = (doc.body?.textContent ?? '').toLowerCase().replace(/’/g, "'");
+      // Corroborating: distinct job-phrase density — counted WITHIN the chosen
+      // readability candidate, never the whole document. Site chrome (careers
+      // footers, nav, a logged-in feed's rails) carries job vocabulary
+      // everywhere; a page-wide count is how a LinkedIn feed reads as a job.
+      // Only the block we would actually extract as the JD gets to vote.
+      // Normalize curly apostrophes so "what you'll do" matches either typography.
+      const scoped = (candidate.textContent ?? '').toLowerCase().replace(/’/g, "'");
       const phrases = [
         'responsibilities',
         'qualifications',
@@ -236,10 +241,9 @@ export async function extractJd(
         'benefits',
       ];
       let hits = 0;
-      for (const p of phrases) if (body.includes(p)) hits++;
+      for (const p of phrases) if (scoped.includes(p)) hits++;
       return hits >= 3;
     };
-    if (!looksLikeJobPosting()) return null;
 
     // Readability fallback. The original only considered <article>/<main>/
     // <section>; sites like YC render the JD in bare <div>s with no semantic
@@ -293,7 +297,9 @@ export async function extractJd(
       if (big) best = { el: big.el, score: big.len };
     }
 
-    if (best) text = norm(best.el.textContent ?? '');
+    // Gate the fallback: accept the candidate as a JD only if it carries a
+    // positive job signal, with job phrases scored inside the candidate itself.
+    if (best && looksLikeJobPosting(best.el)) text = norm(best.el.textContent ?? '');
   }
 
   if (!text) return null;

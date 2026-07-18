@@ -35,16 +35,21 @@ behind it. **Do not start Wave 4 until 6.1 is green.**
 
 ## Task 6.1 — Negative fixtures + a real "is this a job posting?" gate ✅
 
-> **Done.** Inline `looksLikeJobPosting()` gates the readability fallback in
-> `extractJd` (definitive JSON-LD JobPosting / strong ATS-host or job-ish URL /
-> ≥3 distinct job phrases; length alone never passes). Seven content-rich
+> **Done.** Inline `looksLikeJobPosting(candidate)` gates the readability
+> fallback in `extractJd` (definitive JSON-LD JobPosting / strong ATS-host or
+> job-ish URL / ≥3 distinct job phrases; length alone never passes). Phrases are
+> counted **within the chosen readability candidate, not page-wide** — site
+> chrome (careers footers, a logged-in feed's rails) carries job vocabulary
+> everywhere, which is what let a LinkedIn feed read as a job. Seven content-rich
 > negative fixtures (`test/fixtures/negative/`: YouTube, Gemini API docs, news,
-> blog, GitHub repo, marketing page, LinkedIn profile) all return null; a
+> blog, GitHub repo, marketing page, LinkedIn profile) return null; a
 > plain-markup `phrase-only-job.html` (no JSON-LD, no job-ish URL) proves the
-> corroborating tier on the pass side. Every existing positive still extracts.
-> Two mutation checks pass: neuter the gate → all 7 negatives fail; neuter only
-> the phrase tier → the phrase-only positive fails. LinkedIn profile fired 0/9
-> phrases, so no re-scope of the phrase scan was needed. 127 tests green.
+> corroborating tier on the pass side; `chrome-heavy-nonjob.html` (job phrases
+> only in the footer, none in the article) proves the scan is candidate-scoped.
+> Every existing positive still extracts. Three mutation checks pass: neuter the
+> gate → all content-rich negatives fail; neuter only the phrase tier → the
+> phrase-only positive fails; regress the scan to whole-body → only the
+> chrome-heavy negative fails. 129 tests green.
 
 **Root cause (verify before fixing).** `extractJd`'s fallback is "largest
 `<article>`/`<main>`/`<section>` ≥ 200 chars". Nearly every content page on the
