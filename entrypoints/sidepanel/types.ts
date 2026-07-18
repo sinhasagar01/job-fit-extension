@@ -6,4 +6,6 @@ export interface Jd {
   company: string | null;
   text: string;
   hostname: string | null;
+  /** Thin, phrase-only detection — the panel confirms before scoring. See JdResult. */
+  uncertain: boolean;
 }

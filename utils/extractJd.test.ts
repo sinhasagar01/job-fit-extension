@@ -252,6 +252,27 @@ describe('extractJd — job posting detected via job-phrase density alone', () =
     expect(result).not.toBeNull();
     expect(result!.title).toBe('Backend Engineer');
     expect(result!.text.length).toBeGreaterThanOrEqual(200);
+    // Passed on the corroborating tier alone → a thin, uncertain detection.
+    expect(result!.uncertain).toBe(true);
+  });
+});
+
+describe('extractJd — detection confidence (uncertain flag)', () => {
+  // Only the phrase-only readability path is uncertain; every confident path
+  // (JSON-LD, strong URL, known selector) reports uncertain: false.
+  it('JSON-LD JobPosting is confident', async () => {
+    const r = await extractJd(docFrom('generic-jsonld-job.html'), 'https://northwind.example/x');
+    expect(r!.uncertain).toBe(false);
+  });
+
+  it('a strong ATS URL is confident (Greenhouse via /jobs/)', async () => {
+    const r = await extractJd(docFrom('greenhouse-reddit.html'), 'https://job-boards.greenhouse.io/reddit/jobs/8012700');
+    expect(r!.uncertain).toBe(false);
+  });
+
+  it('a known selector is confident (sample-job via #job-details)', async () => {
+    const r = await extractJd(docFrom('sample-job.html'), 'https://careers.northwind.example/senior-frontend');
+    expect(r!.uncertain).toBe(false);
   });
 });
 

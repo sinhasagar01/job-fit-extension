@@ -47,6 +47,8 @@ export default function App() {
   // result/JD can belong to a page the user has left. `stale` drives a warning
   // banner and blocks scoring (so a wrong-page score can't spend a check).
   const [stale, setStale] = useState(false);
+  // Explicit "score it anyway" for an uncertain detection; reset per extraction.
+  const [scoreAnyway, setScoreAnyway] = useState(false);
   const sourceTabIdRef = useRef<number | null>(null); // tab the current jd was read from
   const sourceNavigatedRef = useRef(false); // did that tab navigate since?
   const staleRef = useRef(stale);
@@ -78,6 +80,11 @@ export default function App() {
     setJdLoading(true);
     setJd(null);
     setJdError(null);
+    // Resets the 6.2 uncertain-confirmation so a new page must be re-confirmed.
+    // Ready.test.tsx assumes this runs on every re-extraction (its Harness mirrors
+    // this reset) — if you remove it, a stale confirmation leaks to the next page
+    // and that test won't catch it.
+    setScoreAnyway(false);
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error('No active tab found.');
@@ -249,6 +256,8 @@ export default function App() {
             jdLoading={jdLoading}
             jdError={jdError}
             stale={stale}
+            scoreAnyway={scoreAnyway}
+            onScoreAnyway={setScoreAnyway}
             onRetryJd={runJdExtraction}
             onPastChecks={() => openTracker()}
             pastedJd={pastedJd}

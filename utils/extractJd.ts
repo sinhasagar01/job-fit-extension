@@ -2,6 +2,14 @@ export interface JdResult {
   title: string | null;
   company: string | null;
   text: string;
+  /**
+   * True when the JD came from the readability fallback on the corroborating
+   * (job-phrase) tier alone — no JSON-LD, no ATS host/URL, no known selector.
+   * A thin, ambiguous detection the panel should confirm before scoring.
+   * False for every confident path (known selectors, Ashby API, JSON-LD,
+   * strong host/URL).
+   */
+  uncertain: boolean;
 }
 
 /**
@@ -67,7 +75,7 @@ export async function extractJd(
               const company = ogSite || slug.charAt(0).toUpperCase() + slug.slice(1);
               const title =
                 typeof job.title === 'string' && job.title.trim() ? job.title.trim() : null;
-              return { title, company, text };
+              return { title, company, text, uncertain: false }; // known ATS board
             }
           }
         }
@@ -180,6 +188,8 @@ export async function extractJd(
     '.ashby-job-posting-description',        // Ashby (older/standard postings)
   ];
   let text: string | null = null;
+  // Confident by default; only the phrase-only readability path flips this true.
+  let uncertain = false;
   for (const sel of jdSelectors) {
     text = norm(doc.querySelector(sel)?.textContent ?? '');
     if (text) break;
@@ -209,9 +219,9 @@ export async function extractJd(
     // block (not page-wide). None of these → no JD, and the panel falls back to
     // manual paste rather than guessing. Inline per the executeScript
     // serialization constraint.
-    const looksLikeJobPosting = (candidate: Element): boolean => {
+    const looksLikeJobPosting = (candidate: Element): 'definitive' | 'strong' | 'corroborating' | null => {
       // Definitive.
-      if (jsonLdNodes().some((n) => isJobPostingType(n['@type']))) return true;
+      if (jsonLdNodes().some((n) => isJobPostingType(n['@type']))) return 'definitive';
       // Strong: known ATS host, or a job-ish URL path segment.
       const host = url?.hostname ?? '';
       const path = url?.pathname ?? '';
@@ -220,8 +230,8 @@ export async function extractJd(
         /(^|\.)lever\.co$/.test(host) ||
         /(^|\.)ashbyhq\.com$/.test(host) ||
         (/(^|\.)linkedin\.com$/.test(host) && /\/jobs\//.test(path));
-      if (atsHost) return true;
-      if (/\/(jobs?|careers?|vacanc\w*|openings?)(?:\/|$|\?|#)/i.test(path)) return true;
+      if (atsHost) return 'strong';
+      if (/\/(jobs?|careers?|vacanc\w*|openings?)(?:\/|$|\?|#)/i.test(path)) return 'strong';
       // Corroborating: distinct job-phrase density — counted WITHIN the chosen
       // readability candidate, never the whole document. Site chrome (careers
       // footers, nav, a logged-in feed's rails) carries job vocabulary
@@ -242,7 +252,7 @@ export async function extractJd(
       ];
       let hits = 0;
       for (const p of phrases) if (scoped.includes(p)) hits++;
-      return hits >= 3;
+      return hits >= 3 ? 'corroborating' : null;
     };
 
     // Readability fallback. The original only considered <article>/<main>/
@@ -299,9 +309,18 @@ export async function extractJd(
 
     // Gate the fallback: accept the candidate as a JD only if it carries a
     // positive job signal, with job phrases scored inside the candidate itself.
-    if (best && looksLikeJobPosting(best.el)) text = norm(best.el.textContent ?? '');
+    // A pass on the corroborating (phrase) tier alone is a thin detection —
+    // flag it uncertain so the panel can confirm before scoring.
+    if (best) {
+      const tier = looksLikeJobPosting(best.el);
+      const candidateText = tier ? norm(best.el.textContent ?? '') : null;
+      if (candidateText) {
+        text = candidateText;
+        uncertain = tier === 'corroborating';
+      }
+    }
   }
 
   if (!text) return null;
-  return { title, company, text };
+  return { title, company, text, uncertain };
 }

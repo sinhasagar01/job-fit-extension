@@ -94,7 +94,20 @@ eval harness.
 - Manually: YouTube, the Gemini API docs, and a news article show the paste
   fallback, not a detected job.
 
-## Task 6.2 — Never spend a check on a page we're unsure about
+## Task 6.2 — Never spend a check on a page we're unsure about ✅
+
+> **Done.** `extractJd` now reports `uncertain: true` when the JD came from the
+> readability fallback on the corroborating (phrase) tier alone — no JSON-LD, no
+> ATS host/URL, no known selector. The panel surfaces those as an
+> `UncertainJobCard` (text preview + a "score it anyway" checkbox), not a
+> confident "job found" card, and the "Am I Fit?" button is gated on an explicit
+> confirmation via the pure `scoringEnabled()` predicate (single source of truth,
+> reused by `Ready`). Confirmation resets on every re-extraction. Confident paths
+> (JSON-LD, strong host/URL, known selectors, Ashby API) are unaffected. Tested:
+> `scoringEnabled` boundary (uncertain never auto-enables); `extractJd` confidence
+> assertions; and the repo's first component test (`Ready.test.tsx`) proving the
+> button is disabled on mount, enabled on tick, and re-disabled on re-extraction
+> — mutation-checked against the un-gated wiring. 141 tests green.
 
 **Deliverables**
 
