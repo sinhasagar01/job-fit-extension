@@ -1,0 +1,12 @@
+{
+  "//": "Self-contained tsconfig for the shared scoring contract. It exists so tooling that resolves the tsconfig for these files (the Cloudflare Worker's vite/vitest, which imports ../../utils/shared/*) stops here instead of walking up to the root tsconfig, whose `extends: ./.wxt/tsconfig.json` points at a WXT-generated file absent in the isolated worker CI job. The root `tsc --noEmit` uses the root config and ignores this nested one, so the extension build is unaffected. Deliberately no `extends`.",
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}
